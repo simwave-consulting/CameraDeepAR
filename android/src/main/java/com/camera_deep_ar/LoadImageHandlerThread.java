@@ -9,6 +9,8 @@ import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+//import android.os.Handler;
+//import android.os.HandlerThread;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -17,6 +19,7 @@ import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -67,7 +70,7 @@ public class LoadImageHandlerThread extends HandlerThread {
                 switch (msg.what) {
                     case LOAD_IMAGE_FROM_GALLERY_TASK:
                         Log.d(TAG, "Load Image from Gallery Task, obj: " + msg.obj);
-                        loadBitmapFromGallery((Uri)msg.obj);
+//                        loadBitmapFromGallery((Uri)msg.obj);
                         break;
 
                     case LOAD_DEFAULT_IMAGE_TASK:
@@ -96,20 +99,20 @@ public class LoadImageHandlerThread extends HandlerThread {
         }
     }
 
-    void loadBitmapFromGallery(Uri imageUri) {
-
-        final Bitmap selectedImage;
-        try {
-            selectedImage = BitmapFactory.decodeStream(mContext.get().getContentResolver().openInputStream(imageUri));
-            lastImage = selectedImage;
-            if (lastImage != null) {
-                lastRotate = false;
-                uploadBitmapToDeepAR(selectedImage, false);
-            }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+    void loadBitmapFromGallery(Bitmap imageBitmap) {
+        uploadBitmapToDeepAR(imageBitmap, false);
+//        final Bitmap selectedImage;
+//        try {
+//            selectedImage = BitmapFactory.decodeFile(new File(imageUri));
+//            lastImage = selectedImage;
+//            if (lastImage != null) {
+//                lastRotate = false;
+//                uploadBitmapToDeepAR(selectedImage, false);
+//            }
+//
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void uploadBitmapToDeepAR(Bitmap selectedImage, boolean rotate) {
@@ -163,9 +166,9 @@ public class LoadImageHandlerThread extends HandlerThread {
         SystemClock.sleep(100);
         // Due to initial rotation of portrait image by 90 degrees, we need to tell DeepAR to rotate
         // the final output by another 270 degrees to output a portrait image
-        imageReceiver.receiveFrame(nv21bb, width, height, 0, false, DeepARImageFormat.YUV_NV21, 1);
+        imageReceiver.receiveFrame(nv21bb, width, height, 0, false, DeepARImageFormat.YUV_NV21, 0);
         SystemClock.sleep(100);
-        imageReceiver.receiveFrame(nv21bb, width, height, 0, false, DeepARImageFormat.YUV_NV21, 1 );
+        imageReceiver.receiveFrame(nv21bb, width, height, 0, false, DeepARImageFormat.YUV_NV21, 0 );
 
     }
 

@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.media.Image;
@@ -32,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -39,6 +41,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Date;
@@ -60,6 +63,8 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
+import io.flutter.FlutterInjector;
+import io.flutter.embedding.engine.loader.FlutterLoader;
 import com.camera_deep_ar.LoadImageHandlerThread;
 
 
@@ -95,7 +100,7 @@ public class CameraDeepArView implements PlatformView,
     private int activeFilterType = 0;
     private File videoFile;
 
-    private LoadImageHandlerThread imageGrabber;
+    static LoadImageHandlerThread imageGrabber;
     private ImageView offscreenView;
     private int RESULT_LOAD_IMG = 123;
     private int width = 720;
@@ -159,6 +164,11 @@ public class CameraDeepArView implements PlatformView,
         checkPermissions();
     }
 
+//    @Override
+    public void onActivityResult(Uri uri) {
+        // TODO
+    }
+
 
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -168,6 +178,12 @@ public class CameraDeepArView implements PlatformView,
     }
 
     private  void checkPermissions(){
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
+                    1);
+        }
         initializeDeepAR();
         setupCamera();
     }
@@ -309,12 +325,30 @@ public class CameraDeepArView implements PlatformView,
                 deepAR.changeParameterFloat(changeParameter.toString(), component.toString(), parameter.toString(), ((Double) floatParam).floatValue());
             }
         } else if ("changeImage".equals(methodCall.method)){
-            Log.d("Damon - changeImage", "Being Involked");
-            File externalStoragePublicDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File imgsrc = new File(externalStoragePublicDirectory.toString()+ "/image.jpg");
-            imageGrabber.loadBitmapFromGallery(Uri.fromFile(imgsrc));
-            Log.d("Damon - changeImage", "Path is " + imgsrc.toString());
-            Log.d("Damon - changeImage", "Ended Involked");
+            if (methodCall.arguments instanceof HashMap) {
+                @SuppressWarnings({"unchecked"})
+                Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
+                Object filePath = params.get("filePath");
+
+                FlutterLoader loader = FlutterInjector.instance().flutterLoader();
+                String pathJava = loader.getLookupKeyForAsset(String.valueOf(filePath));
+                try{
+                    Log.d("Damon - changeImage", "Being Involked");
+                    Bitmap bitmap = BitmapFactory.decodeStream(context.getAssets().open(pathJava)); //, options ////R.drawable.texture
+                    imageGrabber.loadBitmapFromGallery(bitmap);
+                    imageGrabber.refreshBitmap();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+//                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+//                photoPickerIntent.setType("image/*");
+//                this.activity.startActivityForResult(photoPickerIntent, RESULT_LOAD_IMG);
+//                File externalStoragePublicDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+//                File imgsrc = new File(externalStoragePublicDirectory.toString() + "/image3.jpg");
+                Log.d("Damon - changeImage", "Ended Involked");
+            }
         }
 
 
@@ -418,13 +452,20 @@ public class CameraDeepArView implements PlatformView,
     }
 
     private void setupCamera() {
+        if (imageGrabber == null) {
+            imageGrabber = new LoadImageHandlerThread(new ContextWrapper(this.context));
+            Log.d("Damon - setupImageG", "Image Granner is 2 + " + (imageGrabber != null));
+        }
+        setupImageGrabber();
+    }
 
-        imageGrabber = new LoadImageHandlerThread(new ContextWrapper(this.context));
-        imageGrabber.start();
+    private void setupImageGrabber(){
+//        imageGrabber.start();
         imageGrabber.setImageReceiver(deepAR);
         File externalStoragePublicDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         File imgsrc = new File(externalStoragePublicDirectory.toString()+ "/image31.jpg");
-        imageGrabber.loadBitmapFromGallery(Uri.fromFile(imgsrc));
+//        imageGrabber.loadBitmapFromGallery(Uri.fromFile(imgsrc));
+        Log.d("Damon - setupImageG", "Image Granner is 1 + " + (imageGrabber == null));
     }
 
 
@@ -528,14 +569,14 @@ public class CameraDeepArView implements PlatformView,
         if (imageGrabber != null && deepAR != null) {
             imageGrabber.setImageReceiver(deepAR);
             // Load default image
-            Message msg = Message.obtain(imageGrabber.getHandler());
-            msg.what = LoadImageHandlerThread.LOAD_DEFAULT_IMAGE_TASK;
-            msg.sendToTarget();
+//            Message msg = Message.obtain(imageGrabber.getHandler());
+//            msg.what = LoadImageHandlerThread.LOAD_DEFAULT_IMAGE_TASK;
+//            msg.sendToTarget();
         }
         //jumpstart masks
         deepAR.switchEffect("mask", getFilterPath(masks.get(1)));
-        refreshImage();
-
+//        refreshImage();
+        Log.d("Damon - initialize", "Image Granner is " + (imageGrabber == null));
     }
 
     void refreshImage() {
