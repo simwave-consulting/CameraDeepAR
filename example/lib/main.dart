@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:camera_deep_ar/camera_deep_ar.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -19,6 +22,13 @@ class _MyAppState extends State<MyApp> {
   Filters currentFilter = Filters.none;
   Masks currentMask = Masks.empty;
   bool isRecording = false;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<String> loadImage() async {
+    final XFile image = await _picker.pickImage(source: ImageSource.gallery);
+    print("DAMON FILE IS ${image.path}");
+    return image.path;
+  }
 
   @override
   void initState() {
@@ -49,7 +59,7 @@ class _MyAppState extends State<MyApp> {
                   isRecording = false;
                   setState(() {});
                 },
-                mode: "camera",
+                mode: "Image",
                 androidLicenceKey:
                     "3b58c448bd650192e7c53d965cfe5dc1c341d2568b663a3962b7517c4ac6eeed0ba1fb2afe491a4b",
                 iosLicenceKey:
@@ -91,9 +101,9 @@ class _MyAppState extends State<MyApp> {
                         ),
                         Expanded(
                           child: FlatButton(
-                            onPressed: () {
-                              cameraDeepArController
-                                  .changeImage("assets/testImage.png");
+                            onPressed: () async {
+                              var path = await loadImage();
+                              cameraDeepArController.changeImage(path);
                               print("DAMON - Calling Change Image Flutter");
                             },
                             child: Icon(Icons.image),
