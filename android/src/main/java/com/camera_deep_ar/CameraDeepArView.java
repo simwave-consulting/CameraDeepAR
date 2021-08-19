@@ -538,7 +538,7 @@ public class CameraDeepArView implements PlatformView,
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         // If we are using on screen rendering we have to set surface view where DeepAR will render
-        deepAR.setRenderSurface(holder.getSurface(), imgSurface.getWidth(), imgSurface.getHeight());
+        deepAR.setRenderSurface(holder.getSurface(), imgSurface.getWidth(), imgSurface.getWidth());
     }
 
     @Override
