@@ -307,12 +307,26 @@ public class CameraDeepArView implements PlatformView,
             if (methodCall.arguments instanceof HashMap) {
              @SuppressWarnings({"unchecked"})
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
+                byte[] imageBytes = (byte[]) params.get("imageBytes");
+                
+                try{
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length); //, options ////R.drawable.texture
+                    imageGrabber.loadBitmapFromGallery(bitmap);
+                    imageGrabber.refreshBitmap();
+                    imageGrabber.refreshBitmap();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            
+        }
+        else if ("changeImagePath".equals(methodCall.method)){
+            if (methodCall.arguments instanceof HashMap) {
+             @SuppressWarnings({"unchecked"})
+                Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
                 Object filePath = params.get("filePath");
                 // NOTE: Kicked this out because we are not loading files from flutter's asset folder!
                  Log.d("File path is ", filePath.toString());
-                // FlutterLoader loader = FlutterInjector.instance().flutterLoader();
-                // String pathJava = loader.getLookupKeyForAsset(String.valueOf(filePath));
-                // Log.d("File path is ", pathJava.toString());
                 try{
                     Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
                     imageGrabber.loadBitmapFromGallery(bitmap);

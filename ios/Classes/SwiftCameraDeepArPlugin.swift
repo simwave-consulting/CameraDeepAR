@@ -288,7 +288,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
                     }
                 }
                 result("Param Changed")
-            } else if call.method == "changeImage" {
+            } else if call.method == "changeImagePath" {
                 if let dict = call.arguments as? [String: Any] {
                     if let filePath = (dict["filePath"] as? String) {
 //                        let key = self.registrar.lookupKey(forAsset: filePath);
@@ -296,7 +296,15 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
                         //let image = UIImage(named: pathSwift!);
                         let image = UIImage(contentsOfFile: filePath);
                         searchingForFace = true;
-                        enqueueFrame(buffer(from: image!))
+                        enqueueFrame(buffer(from: image!));
+                    }
+                }
+                result("Param Changed")
+            } else if call.method == "changeImage" {
+                if let dict = call.arguments as? [String: Any] {
+                    if let imageBytes = (dict["imageBytes"] as? byte[]) {
+                        searchingForFace = true;
+                        enqueueFrame(imageBytes);
                     }
                 }
                 result("Param Changed")
