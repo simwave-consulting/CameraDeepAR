@@ -103,7 +103,7 @@ class _MyAppState extends State<MyApp> {
                           child: FlatButton(
                             onPressed: () async {
                               var path = await loadImage();
-                              cameraDeepArController.changeImage(path);
+                              cameraDeepArController.changeImagePath(path);
                               print("DAMON - Calling Change Image Flutter");
                             },
                             child: Icon(Icons.image),
