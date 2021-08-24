@@ -302,9 +302,9 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
                 result("Param Changed")
             } else if call.method == "changeImage" {
                 if let dict = call.arguments as? [String: Any] {
-                    if let imageBytes = (dict["imageBytes"] as? byte[]) {
+                    if let imageBytes = (dict["imageBytes"] as? [UInt8]) {
                         searchingForFace = true;
-                        enqueueFrame(imageBytes);
+                        enqueueFrame((imageBytes as! CVPixelBuffer));
                     }
                 }
                 result("Param Changed")
