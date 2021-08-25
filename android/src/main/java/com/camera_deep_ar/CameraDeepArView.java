@@ -360,23 +360,16 @@ public class CameraDeepArView implements PlatformView,
                 }
             }
         } else if ("updateFrameAvailable".equals(methodCall.method)) {
-
-            if (methodCall.arguments instanceof HashMap) {
-                Log.d("DAMON", "Running Update Frame Available");
-                try {
-                    BitmapDrawable bitmapDrawable = ((BitmapDrawable) offscreenView.getDrawable());
-                    Bitmap bitmap = bitmapDrawable.getBitmap();
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            Log.d("DAMON", "Running Update Frame Available");
+            BitmapDrawable bitmapDrawable = ((BitmapDrawable) offscreenView.getDrawable());
+            Bitmap bitmap = bitmapDrawable.getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 //                byte[] imageInByte = stream.toByteArray();
 //                ByteArrayInputStream bis = new ByteArrayInputStream(imageInByte);
-                    imageGrabber.loadBitmapFromGallery(bitmap);
-                    imageGrabber.refreshBitmap();
-                    imageGrabber.refreshBitmap();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+            imageGrabber.loadBitmapFromGallery(bitmap);
+            imageGrabber.refreshBitmap();
+            imageGrabber.refreshBitmap();
         }
 
 
