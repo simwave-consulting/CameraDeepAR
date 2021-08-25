@@ -365,7 +365,7 @@ public class CameraDeepArView implements PlatformView,
             Log.d("DAMON", "Drawable is " + bitmapDrawable.toString());
             Bitmap bitmap = bitmapDrawable.getBitmap();
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
 //                byte[] imageInByte = stream.toByteArray();
 //                ByteArrayInputStream bis = new ByteArrayInputStream(imageInByte);
             imageGrabber.loadBitmapFromGallery(bitmap);
