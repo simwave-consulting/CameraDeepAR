@@ -46,8 +46,12 @@ public class LoadImageHandler {
     }
 
     void refreshBitmap() {
+        refreshBitmap(false);
+    }
+
+    void refreshBitmap(boolean scale) {
         if (lastImage != null) {
-            uploadBitmapToDeepAR(lastImage, lastRotate);
+            uploadBitmapToDeepAR(lastImage, lastRotate, scale );
         }
     }
 
