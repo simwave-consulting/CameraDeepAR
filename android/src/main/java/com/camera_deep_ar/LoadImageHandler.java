@@ -67,7 +67,8 @@ public class LoadImageHandler {
         if(scalerRatio > scaleY_X) scalerRatio = scaleY_X;
         int newHeight = (int) (1280*scalerRatio);
         int newWidth = (int) (720*scalerRatio);
-
+        if (newHeight % 2 == 1) newHeight ++;
+        if (newWidth % 2 == 1) newWidth ++;
         if (newHeight > 1280) newHeight = 1280;
         if (newWidth > 720) newWidth = 720;
 
