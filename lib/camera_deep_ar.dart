@@ -373,4 +373,8 @@ class CameraDeepArController {
       'texturePath': texturePath,
     });
   }
+
+  Future updateFrameAvailable() async {
+    return channel.invokeMethod('updateFrameAvailable');
+  }
 }

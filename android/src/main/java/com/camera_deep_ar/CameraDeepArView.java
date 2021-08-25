@@ -13,6 +13,7 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
 import android.media.Image;
 import android.media.MediaScannerConnection;
@@ -37,6 +38,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -353,6 +356,23 @@ public class CameraDeepArView implements PlatformView,
                     Bitmap bitmap = BitmapFactory.decodeStream(context.getAssets().open(pathJava)); //, options  ////R.drawable.texture
                     deepAR.changeParameterTexture(changeParameter.toString(), component.toString(), parameter.toString(), bitmap);
                 } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else if ("updateFrameAvailable".equals(methodCall.method)) {
+
+            if (methodCall.arguments instanceof HashMap) {
+                try {
+                    BitmapDrawable bitmapDrawable = ((BitmapDrawable) offscreenView.getDrawable());
+                    Bitmap bitmap = bitmapDrawable.getBitmap();
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//                byte[] imageInByte = stream.toByteArray();
+//                ByteArrayInputStream bis = new ByteArrayInputStream(imageInByte);
+                    imageGrabber.loadBitmapFromGallery(bitmap);
+                    imageGrabber.refreshBitmap();
+                    imageGrabber.refreshBitmap();
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
