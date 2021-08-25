@@ -75,9 +75,10 @@ public class LoadImageHandler {
         width = resizedBitmap.getWidth();
         height = resizedBitmap.getHeight();
 
-        
+        Log.d("DAMON", "HEIGHT: " + height + " WIDTH: " + width);
 
         byte[] nv21Bytes = getNV21(width, height, resizedBitmap);
+
 
         nv21bb = ByteBuffer.allocateDirect(nv21Bytes.length);
         nv21bb.order(ByteOrder.nativeOrder());
@@ -102,7 +103,7 @@ public class LoadImageHandler {
 
         scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
 
-        byte [] yuv = new byte[inputWidth*inputHeight*3/2];
+        byte [] yuv = new byte[(inputWidth * inputHeight * 3 ) / 2];
         encodeYUV420SP(yuv, argb, inputWidth, inputHeight);
 
         scaled.recycle();
