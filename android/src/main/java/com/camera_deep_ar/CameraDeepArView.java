@@ -314,7 +314,7 @@ public class CameraDeepArView implements PlatformView,
                 
                 try{
                     Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length); //, options ////R.drawable.texture
-                    imageGrabber.loadBitmapFromGallery(bitmap);
+                    imageGrabber.loadBitmapFromGallery(bitmap, false);
                     imageGrabber.refreshBitmap();
                     imageGrabber.refreshBitmap();
                 } catch (Exception e) {
@@ -332,7 +332,7 @@ public class CameraDeepArView implements PlatformView,
                  Log.d("File path is ", filePath.toString());
                 try{
                     Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
-                    imageGrabber.loadBitmapFromGallery(bitmap);
+                    imageGrabber.loadBitmapFromGallery(bitmap, false);
                     imageGrabber.refreshBitmap();
                     imageGrabber.refreshBitmap();
                 } catch (Exception e) {
@@ -368,7 +368,7 @@ public class CameraDeepArView implements PlatformView,
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
 //                byte[] imageInByte = stream.toByteArray();
 //                ByteArrayInputStream bis = new ByteArrayInputStream(imageInByte);
-            imageGrabber.loadBitmapFromGallery(bitmap);
+            imageGrabber.loadBitmapFromGallery(bitmap, false);
             imageGrabber.refreshBitmap();
             imageGrabber.refreshBitmap();
         }

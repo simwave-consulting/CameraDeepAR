@@ -52,27 +52,40 @@ public class LoadImageHandler {
     }
 
     void loadBitmapFromGallery(Bitmap bitmap){
+        loadBitmapFromGallery(bitmap, true);
+    }
+
+    void loadBitmapFromGallery(Bitmap bitmap, boolean scale){
         lastImage = bitmap;
         if (lastImage != null) {
             lastRotate = false;
-            uploadBitmapToDeepAR(bitmap, false);
+            uploadBitmapToDeepAR(bitmap, scale);
         }
     }
 
     private void uploadBitmapToDeepAR(Bitmap selectedImage, boolean rotate) {
+        uploadBitmapToDeepAR(selectedImage, rotate, true);
+    }
 
-        double scaleX_Y = (double) selectedImage.getWidth() / (double) selectedImage.getHeight();
-        double scaleY_X = (double) selectedImage.getHeight()/ (double) selectedImage.getWidth();
-        double scalerRatio = scaleX_Y;
-        if(scalerRatio > scaleY_X) scalerRatio = scaleY_X;
-        int newHeight = (int) (1280*scalerRatio);
-        int newWidth = (int) (720*scalerRatio);
-        if (newHeight % 2 == 1) newHeight ++;
-        if (newWidth % 2 == 1) newWidth ++;
-        if (newHeight > 1280) newHeight = 1280;
-        if (newWidth > 720) newWidth = 720;
+    private void uploadBitmapToDeepAR(Bitmap selectedImage, boolean rotate, boolean scale) {
+        Bitmap resizedBitmap = selectedImage;
 
-        final Bitmap resizedBitmap = scaleCenterCrop(selectedImage, newHeight, newWidth);
+        if (scale == true) {
+            double scaleX_Y = (double) selectedImage.getWidth() / (double) selectedImage.getHeight();
+            double scaleY_X = (double) selectedImage.getHeight() / (double) selectedImage.getWidth();
+            double scalerRatio = scaleX_Y;
+            if (scalerRatio > scaleY_X) scalerRatio = scaleY_X;
+            int newHeight = (int) (1280 * scalerRatio);
+            int newWidth = (int) (720 * scalerRatio);
+            if (newHeight % 2 == 1) newHeight++;
+            if (newWidth % 2 == 1) newWidth++;
+            if (newHeight > 1280) newHeight = 1280;
+            if (newWidth > 720) newWidth = 720;
+
+            resizedBitmap = scaleCenterCrop(selectedImage, newHeight, newWidth);
+        }
+
+
         width = resizedBitmap.getWidth();
         height = resizedBitmap.getHeight();
 
