@@ -362,6 +362,7 @@ public class CameraDeepArView implements PlatformView,
         } else if ("updateFrameAvailable".equals(methodCall.method)) {
 
             if (methodCall.arguments instanceof HashMap) {
+                Log.d("DAMON", "Running Update Frame Available");
                 try {
                     BitmapDrawable bitmapDrawable = ((BitmapDrawable) offscreenView.getDrawable());
                     Bitmap bitmap = bitmapDrawable.getBitmap();
