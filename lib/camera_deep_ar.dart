@@ -133,7 +133,7 @@ class _CameraDeepArState extends State<CameraDeepAr> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    print("Camera deepAR DART FILE DESTROYEDDDDD!");
     super.dispose();
   }
 
@@ -351,9 +351,11 @@ class CameraDeepArController {
     });
   }
 
-  Future changeImage(Uint8List imageBytes) async {
+  Future changeImage(Uint8List imageBytes, int width, int height) async {
     return channel.invokeMethod('changeImage', <String, dynamic>{
       'imageBytes': imageBytes,
+      'width': width,
+      'height': height,
     });
   }
 
