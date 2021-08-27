@@ -93,7 +93,8 @@ public class DeepArCameraViewFactory: NSObject, FlutterPlatformViewFactory {
 
 
 //The main view for DeepAr Camera
-public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
+public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
+    
     
     let messenger: FlutterBinaryMessenger
     let frame: CGRect
@@ -152,7 +153,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
         channel = FlutterMethodChannel(name: "plugins.flutter.io/deep_ar_camera/\(viewId)", binaryMessenger: messenger)
         super.init()
         
-
+        
         
         NotificationCenter.default.addObserver(self, selector: #selector(orientationDidChange), name:  Notification.Name("UIDeviceOrientationDidChangeNotification"), object: nil)
         
@@ -182,16 +183,16 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
                 self.channel.invokeMethod("onCameraReady", arguments: dict)
                 result("iOS is ready")
             }
-                
+            
             else if call.method == "setCameraMode" {
-                           if let dict = call.arguments as? [String: Any] {
-                               if let cameraMode = (dict["cameraMode"] as? Int) {
-                                   //let index = Int(direction) ?? 0
-                                self.currentMode = cameraMode == 0 ? .masks : cameraMode == 1 ? .effects  : .filters
-                               }
-                           }
-                           result("Camera  Changed")
-                       }
+                if let dict = call.arguments as? [String: Any] {
+                    if let cameraMode = (dict["cameraMode"] as? Int) {
+                        //let index = Int(direction) ?? 0
+                        self.currentMode = cameraMode == 0 ? .masks : cameraMode == 1 ? .effects  : .filters
+                    }
+                }
+                result("Camera  Changed")
+            }
             else if call.method == "switchCameraDirection" {
                 if let dict = call.arguments as? [String: Any] {
                     if let direction = (dict["direction"] as? Int) {
@@ -255,7 +256,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
                             let pathSwift = Bundle.main.path(forResource: key, ofType: nil)
                             self.deepAR.switchEffect(withSlot: mode, path: pathSwift)
                         }
-                       
+                        
                     }
                 }
                 NSLog("Custom Effect Changed")
@@ -298,8 +299,8 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
             } else if call.method == "changeImagePath" {
                 if let dict = call.arguments as? [String: Any] {
                     if let filePath = (dict["filePath"] as? String) {
-//                        let key = self.registrar.lookupKey(forAsset: filePath);
-//                        let pathSwift = Bundle.main.path(forResource: key, ofType: nil);
+                        //                        let key = self.registrar.lookupKey(forAsset: filePath);
+                        //                        let pathSwift = Bundle.main.path(forResource: key, ofType: nil);
                         //let image = UIImage(named: pathSwift!);
                         let image = UIImage(contentsOfFile: filePath);
                         searchingForFace = true;
@@ -310,53 +311,58 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
                 result("Param Changed")
             } else if call.method == "changeImage" {
                 if let dict = call.arguments as? [String: Any] {
-                    if let imageBytes = (dict["imageBytes"] as? [UInt8]) {
-                        searchingForFace = true;
-//                        let data = NSData(bytes: imageBytes, length: imageBytes.count);
-                        enqueueFrame((imageBytes as! CVPixelBuffer));
-                            
-//                            buffer(from: UIImage(data: data as Data)!));
-                        
-
-            /*
-
                     let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
                     let width = dict["width"] as! Int;
                     let height = dict["height"] as! Int;
                     NSLog("TYPE OF: \(type(of: imageBytes)). Width: \(width) Height: \(height) Data: \(imageBytes.data.base64EncodedString())");
-                    
-                    ImageHelper.convertBitmapRGBA8ToUIImage(imageBytes.data, width, height);
-                    
-                    // convertBitmapRGBA8ToUIImage();
-                    //if let imageBytes = (dict["imageBytes"] as? [FlutterStandardTypedData]) {
-                        searchingForFace = true;
-                    //let data = NSData(bytes: imageBytes.data, length: imageBytes.data.count);
-                    //let pixels = imageBytes.data as! [UInt8]);
-                    let data = imageBytes.data;
-                    
-                    for (index, byte) in data.enumerated() where index < 10
-                    {
-                        NSLog("%d", byte);
-                    }
-                    
-                   
-                    let dataDecoded:NSData = NSData(base64Encoded: imageBytes.data.base64EncodedString(), options: NSData.Base64DecodingOptions(rawValue: 0))!
-                    let decodedImage:UIImage=UIImage(data:dataDecoded as Data)!
-                    
-                    //let image = UIImage(data: data);
-                    enqueueFrame(buffer(from: decodedImage));
-                    //buffer(from: UIImage(data: data as Data)!));
+                    searchingForFace = true;
+                    var mutableData = imageBytes.data;
+                    mutableData.withUnsafeMutableBytes({(bytes: UnsafeMutablePointer<UInt8>)->Void in
                         
-                        
-                    //}
-                }
-
-                        */
+                        let image = ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
+                        enqueueFrame(buffer(from: image!));
                         
                     }
+                    );
+                    /*
+                     
+                     let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
+                     let width = dict["width"] as! Int;
+                     let height = dict["height"] as! Int;
+                     NSLog("TYPE OF: \(type(of: imageBytes)). Width: \(width) Height: \(height) Data: \(imageBytes.data.base64EncodedString())");
+                     
+                     ImageHelper.convertBitmapRGBA8ToUIImage(imageBytes.data, width, height);
+                     
+                     // convertBitmapRGBA8ToUIImage();
+                     //if let imageBytes = (dict["imageBytes"] as? [FlutterStandardTypedData]) {
+                     searchingForFace = true;
+                     //let data = NSData(bytes: imageBytes.data, length: imageBytes.data.count);
+                     //let pixels = imageBytes.data as! [UInt8]);
+                     let data = imageBytes.data;
+                     
+                     for (index, byte) in data.enumerated() where index < 10
+                     {
+                     NSLog("%d", byte);
+                     }
+                     
+                     
+                     let dataDecoded:NSData = NSData(base64Encoded: imageBytes.data.base64EncodedString(), options: NSData.Base64DecodingOptions(rawValue: 0))!
+                     let decodedImage:UIImage=UIImage(data:dataDecoded as Data)!
+                     
+                     //let image = UIImage(data: data);
+                     enqueueFrame(buffer(from: decodedImage));
+                     //buffer(from: UIImage(data: data as Data)!));
+                     
+                     
+                     //}*/
+                    
+                    
+                    
+                    
                 }
-                result("Param Changed")
             }
+            result("Param Changed")
+            
         }
         if #available(iOS 9.0, *) {
             self.initCameraDeepAR()
@@ -378,53 +384,53 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
     
     
     func buffer(from image: UIImage) -> CVPixelBuffer? {
-      let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
-      var pixelBuffer : CVPixelBuffer?
-      let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.size.width), Int(image.size.height), kCVPixelFormatType_32BGRA, attrs, &pixelBuffer)
-      guard (status == kCVReturnSuccess) else {
-        return nil
-      }
+        let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
+        var pixelBuffer : CVPixelBuffer?
+        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.size.width), Int(image.size.height), kCVPixelFormatType_32BGRA, attrs, &pixelBuffer)
+        guard (status == kCVReturnSuccess) else {
+            return nil
+        }
         //kCVPixelFormatType_32RGBA
-      CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-      let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer!)
-
-      let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-      let context = CGContext(data: pixelData, width: Int(image.size.width), height: Int(image.size.height), bitsPerComponent: 8, bytesPerRow: 4 * Int(image.size.width), space: rgbColorSpace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue)
-    // CVPixelBufferGetBytesPerRow(pixelBuffer!)
-      context?.translateBy(x: 0, y: image.size.height)
-      context?.scaleBy(x: 1.0, y: -1.0)
-
-      UIGraphicsPushContext(context!)
-      image.draw(in: CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height))
-      UIGraphicsPopContext()
-      CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-
-      return pixelBuffer
+        CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer!)
+        
+        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
+        let context = CGContext(data: pixelData, width: Int(image.size.width), height: Int(image.size.height), bitsPerComponent: 8, bytesPerRow: 4 * Int(image.size.width), space: rgbColorSpace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue)
+        // CVPixelBufferGetBytesPerRow(pixelBuffer!)
+        context?.translateBy(x: 0, y: image.size.height)
+        context?.scaleBy(x: 1.0, y: -1.0)
+        
+        UIGraphicsPushContext(context!)
+        image.draw(in: CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height))
+        UIGraphicsPopContext()
+        CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        
+        return pixelBuffer
     }
     
     
-//    @objc
-//    private func handlePinch(_ pinch: UIPinchGestureRecognizer) {
-//        guard sessionSetupSucceeds,  let device = activeCamera else { return }
-//
-//        switch pinch.state {
-//        case .began:
-//            initialScale = device.videoZoomFactor
-//        case .changed:
-//            let minAvailableZoomScale = device.minAvailableVideoZoomFactor
-//            let maxAvailableZoomScale = device.maxAvailableVideoZoomFactor
-//            let availableZoomScaleRange = minAvailableZoomScale...maxAvailableZoomScale
-//            let resolvedZoomScaleRange = zoomScaleRange.clamped(to: availableZoomScaleRange)
-//
-//            let resolvedScale = max(resolvedZoomScaleRange.lowerBound, min(pinch.scale * initialScale, resolvedZoomScaleRange.upperBound))
-//
-//            configCamera(device) { device in
-//                device.videoZoomFactor = resolvedScale
-//            }
-//        default:
-//            return
-//        }
-//    }
+    //    @objc
+    //    private func handlePinch(_ pinch: UIPinchGestureRecognizer) {
+    //        guard sessionSetupSucceeds,  let device = activeCamera else { return }
+    //
+    //        switch pinch.state {
+    //        case .began:
+    //            initialScale = device.videoZoomFactor
+    //        case .changed:
+    //            let minAvailableZoomScale = device.minAvailableVideoZoomFactor
+    //            let maxAvailableZoomScale = device.maxAvailableVideoZoomFactor
+    //            let availableZoomScaleRange = minAvailableZoomScale...maxAvailableZoomScale
+    //            let resolvedZoomScaleRange = zoomScaleRange.clamped(to: availableZoomScaleRange)
+    //
+    //            let resolvedScale = max(resolvedZoomScaleRange.lowerBound, min(pinch.scale * initialScale, resolvedZoomScaleRange.upperBound))
+    //
+    //            configCamera(device) { device in
+    //                device.videoZoomFactor = resolvedScale
+    //            }
+    //        default:
+    //            return
+    //        }
+    //    }
     
     
     @objc func orientationDidChange() {
@@ -452,9 +458,9 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
         
         
     }
-
+    
     @objc public func frameAvailable(_ sampleBuffer: CMSampleBuffer!){
-
+        
     }
     
     
@@ -530,12 +536,12 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
         }
         self.arView = self.deepAR.createARView(withFrame: self.frame) as? ARView
         self.arView.translatesAutoresizingMaskIntoConstraints = false
-       
+        
         if(mode.elementsEqual("camera")){
             cameraController.startCamera()
         }
     }
-
+    
     
     @objc
     private func didTapRecordActionButton() {
@@ -705,8 +711,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate{
     }
     
 }
-
-
+    
 extension String {
     var path: String? {
         let filePath = Bundle.main.resourcePath!+"/Frameworks/camera_deep_ar.framework/\(self)"
@@ -716,3 +721,4 @@ extension String {
         //return Bundle.main.path(forResource: self, ofType: nil)
     }
 }
+
