@@ -248,7 +248,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                 channel.setMethodCallHandler(nil);
                 self.arView.shutdown();
                 result("You Tapped on SnapPhoto")
-            }else if call.method == "switchEffect" {
+            } else if call.method == "switchEffect" {
                 if let dict = call.arguments as? [String: Any] {
                     if let mode = (dict["mode"] as? String) {
                         if let path = (dict["path"] as? String){
@@ -302,10 +302,12 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                         //                        let key = self.registrar.lookupKey(forAsset: filePath);
                         //                        let pathSwift = Bundle.main.path(forResource: key, ofType: nil);
                         //let image = UIImage(named: pathSwift!);
-                        let image = UIImage(contentsOfFile: filePath);
+                        //let image = UIImage(contentsOfFile: filePath);
+                        let size = CGSize(width: 720, height: 1280);
+                        let image = resizedImage(at: filePath, for: size);
+                        
                         searchingForFace = true;
                         enqueueFrame(buffer(from: image!));
-                        
                     }
                 }
                 result("Param Changed")
@@ -369,6 +371,25 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             
         } else {
             // Fallback on earlier versions
+        }
+    }
+    
+    // Technique #1 - https://nshipster.com/image-resizing/
+    func resizedImage(at path: String, for size: CGSize) -> UIImage? {
+        guard let image = UIImage(contentsOfFile: path) else {
+            return nil
+        }
+        
+        let ratio = CGSize(width: size.width / image.size.width, height: size.height / image.size.height)
+        
+        let scaler = max(ratio.width, ratio.height);
+        let newSize = CGSize(width: image.size.width * scaler, height: image.size.height * scaler);
+        
+        let newOrigin = CGPoint(x: (size.width - newSize.width) / 2, y: (size.height - newSize.height) / 2);
+
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { (context) in
+            image.draw(in: CGRect(origin: newOrigin, size: newSize))
         }
     }
     
