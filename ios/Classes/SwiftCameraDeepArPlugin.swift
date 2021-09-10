@@ -303,7 +303,10 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                         //                        let pathSwift = Bundle.main.path(forResource: key, ofType: nil);
                         //let image = UIImage(named: pathSwift!);
                         //let image = UIImage(contentsOfFile: filePath);
-                        let size = CGSize(width: 720, height: 1280);
+                        
+                        //let size = CGSize(width: 960, height: 1280);
+                        let size = CGSize(width: 1536, height: 2048);
+                        //let size = UIApplication.shared.keyWindow!.bounds.size;
                         let image = resizedImage(at: filePath, for: size);
                         
                         searchingForFace = true;
@@ -319,13 +322,14 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                     NSLog("TYPE OF: \(type(of: imageBytes)). Width: \(width) Height: \(height) Data: \(imageBytes.data.base64EncodedString())");
                     searchingForFace = true;
                     var mutableData = imageBytes.data;
-                    mutableData.withUnsafeMutableBytes({(bytes: UnsafeMutablePointer<UInt8>)->Void in
-                        
+                    mutableData.withUnsafeMutableBytes { (bytesRawPointer : UnsafeMutableRawBufferPointer) in
+                        let bytes = bytesRawPointer.baseAddress!.assumingMemoryBound(to: UInt8.self);
                         let image = ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
-                        enqueueFrame(buffer(from: image!));
+                        let size = CGSize(width: 720, height: 1280);
+                        let resizedImg = resizedImage(with: image!, for: size);
                         
+                        enqueueFrame(buffer(from: resizedImg!));
                     }
-                    );
                     /*
                      
                      let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
@@ -380,16 +384,27 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             return nil
         }
         
-        let ratio = CGSize(width: size.width / image.size.width, height: size.height / image.size.height)
+        return resizedImage(with: image, for: size);
+    }
+    
+    func resizedImage(with image: UIImage, for size: CGSize) -> UIImage? {
+        let scaleX_Y = image.size.width / image.size.height;
+        //let scaleY_X = image.size.height / image.size.width;
+        //let scalerRatio = max(scaleX_Y, scaleY_X);
         
-        let scaler = max(ratio.width, ratio.height);
-        let newSize = CGSize(width: image.size.width * scaler, height: image.size.height * scaler);
+        //let relativeRatio = CGSize(width: size.width / image.size.width, height: size.height / image.size.height)
         
-        let newOrigin = CGPoint(x: (size.width - newSize.width) / 2, y: (size.height - newSize.height) / 2);
+        //let scaler = max(relativeRatio.width, relativeRatio.height);
+        //let newSize = CGSize(width: image.size.width * scaler, height: image.size.height * scaler);
+        //let newSize = CGSize(width: size.height * scaleX_Y, height: size.height);
+        let originalSize = image.size;
+        NSLog("Original size: (w: \(originalSize.width), h: \(originalSize.height))");
+        
+        //let newOrigin = CGPoint(x: (size.width - newSize.width) / 2, y: (size.height - newSize.height) / 2);
 
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { (context) in
-            image.draw(in: CGRect(origin: newOrigin, size: newSize))
+            image.draw(in: CGRect(origin: .zero, size: size))
         }
     }
     
