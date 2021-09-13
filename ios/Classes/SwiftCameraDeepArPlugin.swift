@@ -311,11 +311,8 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                         /* As we're still trying to understand the values that DeepAR will accept,
                          * we're going to scale the source image to known good values. */
                         
-                        let screenSize = UIApplication.shared.keyWindow!.bounds.size;
                         var size: CGSize;
-                        
-                        let aspectRatio = screenSize.width / screenSize.height;
-                        if (aspectRatio == 3/4)
+                        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiom.pad)
                         {
                             let scale = UIScreen.main.scale;
                             size = CGSize(width: 768 * scale, height: 1024 * scale);
@@ -759,7 +756,9 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         
         /* Start by resizing the screenshot relative to the source image.
          * This is so that we can 'draw' the source image into a new UIImage, and then draw the screenshot overtop of it. */
-        let resizedRatio = sourceImage.size.height / screenshot.size.height;
+        let resizedRatio = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiom.pad
+            ? sourceImage.size.width / screenshot.size.width
+            : sourceImage.size.height / screenshot.size.height;
         let newSize = CGSize(width: screenshot.size.width * resizedRatio, height: screenshot.size.height * resizedRatio);
         let resizedScreenshot = resizedImage(with: screenshot, for: newSize)!;
         
