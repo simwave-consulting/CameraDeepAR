@@ -20,6 +20,8 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Message;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -107,6 +109,9 @@ public class CameraDeepArView implements PlatformView,
     private int height = 1280;
     private String displayMode = "camera";
 
+    private Handler m_handler;
+    private boolean searchingForFace = true;
+
     public CameraDeepArView(Activity mActivity, BinaryMessenger mBinaryMessenger, Context mContext, int id, Object args) {
         this.activity=mActivity;
         this.context=mContext;
@@ -148,8 +153,10 @@ public class CameraDeepArView implements PlatformView,
                 cameraDevice = defaultCameraDevice;
             }
         }
+        m_handler = new Handler(Looper.getMainLooper());
         methodChannel.setMethodCallHandler(this);
         checkPermissions();
+
     }
 
     private void checkPermissions(){
@@ -173,6 +180,7 @@ public class CameraDeepArView implements PlatformView,
         deepAR = new DeepAR(activity);
         deepAR.setLicenseKey(androidLicenceKey);
         deepAR.initialize(activity, this);
+        deepAR.setFaceDetectionSensitivity(2);
         initializeFilters();
     }
 
@@ -315,8 +323,10 @@ public class CameraDeepArView implements PlatformView,
                 try{
                     Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length); //, options ////R.drawable.texture
                     imageGrabber.loadBitmapFromGallery(bitmap, false);
-                    imageGrabber.refreshBitmap();
-                    imageGrabber.refreshBitmap();
+                    this.searchingForFace = true;
+                    this.checkForFace();
+                    // imageGrabber.refreshBitmap();
+                    // imageGrabber.refreshBitmap();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -333,8 +343,10 @@ public class CameraDeepArView implements PlatformView,
                 try{
                     Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
                     imageGrabber.loadBitmapFromGallery(bitmap, false);
-                    imageGrabber.refreshBitmap();
-                    imageGrabber.refreshBitmap();
+                    this.searchingForFace = true;
+                    this.checkForFace();    
+                    // imageGrabber.refreshBitmap();
+                    // imageGrabber.refreshBitmap();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -369,11 +381,32 @@ public class CameraDeepArView implements PlatformView,
 //                byte[] imageInByte = stream.toByteArray();
 //                ByteArrayInputStream bis = new ByteArrayInputStream(imageInByte);
             imageGrabber.loadBitmapFromGallery(bitmap, false);
-            imageGrabber.refreshBitmap();
-            imageGrabber.refreshBitmap();
+            this.searchingForFace = true;
+            this.checkForFace();
+            // imageGrabber.refreshBitmap();
+            // imageGrabber.refreshBitmap();
         }
 
 
+    }
+
+    private void checkForFace(){
+        this.checkForFace(1);
+    }
+
+    private void checkForFace(int sensitivity) {
+        if (!this.searchingForFace) {
+            return;
+        }
+        
+        if (sensitivity > 3) {
+            sensitivity = 3;
+        }
+        
+        this.deepAR.setFaceDetectionSensitivity(sensitivity);
+        this.imageGrabber.refreshBitmap();
+        final int newSensitivity = sensitivity + 1;
+        this.m_handler.postDelayed( () -> checkForFace(newSensitivity), sensitivity * 1000);
     }
 
     private void initializeFilters() {
@@ -654,7 +687,9 @@ public class CameraDeepArView implements PlatformView,
 
     @Override
     public void faceVisibilityChanged(boolean b) {
-
+        Log.d("DAMON", "FACE VISIBILITY IS BEING CHECKED " + b);
+        if (b)
+            this.searchingForFace = false;
     }
 
     @Override

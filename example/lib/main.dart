@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera_deep_ar/camera_deep_ar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+// import 'package:image_picker/image_picker.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,10 +25,10 @@ class _MyAppState extends State<MyApp> {
   bool isRecording = false;
   final ImagePicker _picker = ImagePicker();
 
-  Future<String> loadImage() async {
+  Future<void> loadImage() async {
     final XFile image = await _picker.pickImage(source: ImageSource.gallery);
     print("DAMON FILE IS ${image.path}");
-    return image.path;
+    this.cameraDeepArController.changeImagePath(image.path);
   }
 
   @override
@@ -48,6 +49,7 @@ class _MyAppState extends State<MyApp> {
             CameraDeepAr(
                 onCameraReady: (isReady) {
                   _platformVersion = "Camera status $isReady";
+
                   setState(() {});
                 },
                 onImageCaptured: (path) {
@@ -59,14 +61,15 @@ class _MyAppState extends State<MyApp> {
                   isRecording = false;
                   setState(() {});
                 },
-                mode: "Image",
+                mode: "image",
                 androidLicenceKey:
                     "3b58c448bd650192e7c53d965cfe5dc1c341d2568b663a3962b7517c4ac6eeed0ba1fb2afe491a4b",
                 iosLicenceKey:
                     "53618212114fc16bbd7499c0c04c2ca11a4eed188dc20ed62a7f7eec02b41cb34d638e72945a6bf6",
                 cameraDeepArCallback: (c) async {
                   cameraDeepArController = c;
-                  setState(() {});
+                  await loadImage();
+                  // setState(() {});
                 }),
             Align(
               alignment: Alignment.bottomCenter,
@@ -102,8 +105,8 @@ class _MyAppState extends State<MyApp> {
                         Expanded(
                           child: FlatButton(
                             onPressed: () async {
-                              var path = await loadImage();
-                              cameraDeepArController.changeImagePath(path);
+                              await loadImage();
+                              // cameraDeepArController.changeImagePath(path);
                               print("DAMON - Calling Change Image Flutter");
                             },
                             child: Icon(Icons.image),

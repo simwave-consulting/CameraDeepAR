@@ -72,7 +72,7 @@ public class LoadImageHandler {
     }
 
     private void uploadBitmapToDeepAR(Bitmap selectedImage, boolean rotate, boolean scale) {
-        Bitmap resizedBitmap = selectedImage;
+        Bitmap resizedBitmap = null;
 
         if (scale == true) {
             double scaleX_Y = (double) selectedImage.getWidth() / (double) selectedImage.getHeight();
@@ -87,6 +87,10 @@ public class LoadImageHandler {
             if (newWidth > 720) newWidth = 720;
 
             resizedBitmap = scaleCenterCrop(selectedImage, newHeight, newWidth);
+        }
+        else
+        {
+            resizedBitmap = selectedImage.copy(selectedImage.getConfig(), true);
         }
 
 
