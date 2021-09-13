@@ -105,7 +105,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     var modeValue: String
     var directionValue: String
     var mode: String
-    
+    var windowFrame: CGRect
     
     // MARK: - IBOutlets -
     
@@ -127,6 +127,8 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     private var deepAR: DeepAR!
     private var arView: ARView!
     private var searchingForFace = false
+    
+    private var sourceImage: UIImage!
     
     private var imageFrame: CGRect!
     
@@ -151,6 +153,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         modeValue=""
         directionValue=""
         channel = FlutterMethodChannel(name: "plugins.flutter.io/deep_ar_camera/\(viewId)", binaryMessenger: messenger)
+        windowFrame = CGRect.zero
         super.init()
         
         
@@ -240,7 +243,8 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                 self.isRecordingInProcess = false
                 result("You Tapped on stopVideoRecording")
             } else if call.method == "snapPhoto" {
-                self.deepAR.takeScreenshot()
+                //self.deepAR.takeScreenshot()
+                self.snapPhoto();
                 result("You Tapped on SnapPhoto")
             } else if call.method == "dispose" {
                 searchingForFace = false;
@@ -304,13 +308,27 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                         //let image = UIImage(named: pathSwift!);
                         //let image = UIImage(contentsOfFile: filePath);
                         
-                        //let size = CGSize(width: 960, height: 1280);
-                        let size = CGSize(width: 1536, height: 2048);
-                        //let size = UIApplication.shared.keyWindow!.bounds.size;
-                        let image = resizedImage(at: filePath, for: size);
+                        /* As we're still trying to understand the values that DeepAR will accept,
+                         * we're going to scale the source image to known good values. */
+                        
+                        let screenSize = UIApplication.shared.keyWindow!.bounds.size;
+                        var size: CGSize;
+                        
+                        let aspectRatio = screenSize.width / screenSize.height;
+                        if (aspectRatio == 3/4)
+                        {
+                            let scale = UIScreen.main.scale;
+                            size = CGSize(width: 768 * scale, height: 1024 * scale);
+                        }
+                        else
+                        {
+                            size = CGSize(width: 720, height: 1280)
+                        }
+                        
+                        sourceImage = resizedImage(at: filePath, for: size)!;
                         
                         searchingForFace = true;
-                        enqueueFrame(buffer(from: image!));
+                        enqueueFrame(buffer(from: sourceImage!));
                     }
                 }
                 result("Param Changed")
@@ -378,6 +396,24 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         }
     }
     
+    
+    // Technique #1 - https://nshipster.com/image-resizing/
+    func resizedImageForScreen(at path: String) -> UIImage? {
+        guard let image = UIImage(contentsOfFile: path) else {
+            return nil
+        }
+        
+        return resizedImageForScreen(with: image);
+    }
+    
+    func resizedImageForScreen(with image: UIImage) -> UIImage? {
+        let scale = UIScreen.main.scale
+        let size = CGSize(width: windowFrame.width * scale, height: (windowFrame.width * scale) * (16/9));
+        //let size = CGSize(width: 1080, height: 1920)
+        
+        return resizedImage(with: image, for: size);
+    }
+    
     // Technique #1 - https://nshipster.com/image-resizing/
     func resizedImage(at path: String, for size: CGSize) -> UIImage? {
         guard let image = UIImage(contentsOfFile: path) else {
@@ -388,23 +424,30 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     }
     
     func resizedImage(with image: UIImage, for size: CGSize) -> UIImage? {
-        let scaleX_Y = image.size.width / image.size.height;
-        //let scaleY_X = image.size.height / image.size.width;
+        //let scaleX_Y = size.width / size.height;
+        //let scaleY_X = size.height / size.width;
         //let scalerRatio = max(scaleX_Y, scaleY_X);
         
-        //let relativeRatio = CGSize(width: size.width / image.size.width, height: size.height / image.size.height)
+        let relativeRatio = CGSize(width: size.width / image.size.width, height: size.height / image.size.height)
+        let scalerRatio = max(relativeRatio.width, relativeRatio.height);
         
         //let scaler = max(relativeRatio.width, relativeRatio.height);
-        //let newSize = CGSize(width: image.size.width * scaler, height: image.size.height * scaler);
-        //let newSize = CGSize(width: size.height * scaleX_Y, height: size.height);
-        let originalSize = image.size;
-        NSLog("Original size: (w: \(originalSize.width), h: \(originalSize.height))");
+        var newSize = CGSize(width: image.size.width * scalerRatio, height: image.size.height * scalerRatio);
+        if (!Int(newSize.width).isMultiple(of: 2)) {
+            newSize.width = CGFloat(Int(newSize.width) + 1);
+        }
+        if (!Int(newSize.height).isMultiple(of: 2)) {
+            newSize.height = CGFloat(Int(newSize.height) + 1);
+        }
         
-        //let newOrigin = CGPoint(x: (size.width - newSize.width) / 2, y: (size.height - newSize.height) / 2);
+        //let newSize = CGSize(width: size.height * scaleX_Y, height: size.height);
+        let newOrigin = CGPoint(x: (size.width - newSize.width) / 2, y: (size.height - newSize.height) / 2);
+        
+        //NSLog("Original size: (w: \(image.size.width), h: \(image.size.height)) -> To size: (w: \(size.width), h: \(size.height))");
 
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { (context) in
-            image.draw(in: CGRect(origin: .zero, size: size))
+            image.draw(in: CGRect(origin: newOrigin, size: newSize))
         }
     }
     
@@ -417,7 +460,6 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             enqueueFrame(sampleBuffer)
         })
     }
-    
     
     func buffer(from image: UIImage) -> CVPixelBuffer? {
         let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
@@ -491,20 +533,15 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         } else {
             // Fallback on earlier versions
         }
-        
-        
     }
     
     @objc public func frameAvailable(_ sampleBuffer: CMSampleBuffer!){
         
     }
     
-    
-    
     public func view() -> UIView {
         return arView;
     }
-    
     
     // MARK: - Private properties -
     
@@ -538,7 +575,6 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         }
     }
     
-    
     private func updateModeAppearance() {
         buttonModePairs.forEach { (button, mode) in
             button.isSelected = mode == currentMode
@@ -560,16 +596,21 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     
     private var isRecordingInProcess: Bool = false
     
+    func statusBarHeight() -> CGFloat {
+        let statusBarSize = UIApplication.shared.statusBarFrame.size
+        return min(statusBarSize.width, statusBarSize.height)
+    }
     
     @available(iOS 9.0, *)
     @objc func  initCameraDeepAR(){
         self.deepAR.delegate = self
         self.deepAR.setLicenseKey(self.licenceKey)
         cameraController.deepAR = self.deepAR
-        if(self.arView != nil){
+        if (self.arView != nil) {
             self.arView.removeFromSuperview();
-            
         }
+        
+        windowFrame = UIApplication.shared.keyWindow!.frame;
         self.arView = self.deepAR.createARView(withFrame: self.frame) as? ARView
         self.arView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -577,7 +618,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             cameraController.startCamera()
         }
     }
-    
+
     
     @objc
     private func didTapRecordActionButton() {
@@ -705,10 +746,33 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     public func recordingFailedWithError(_ error: Error!) {}
     
     public func didTakeScreenshot(_ screenshot: UIImage!) {
+        // https://www.hackingwithswift.com/example-code/media/how-to-save-a-uiimage-to-a-file-using-jpegdata-and-pngdata
+        /*let renderer = UIGraphicsImageRenderer(size: view().bounds.size)
+        let image = renderer.image { ctx in
+            childView.drawHierarchy(in: childView.bounds, afterScreenUpdates: true)
+        }*/
+
+        /* In the short-term, since we still aren't sure which resolutions are fully supported by DeepAR, we're
+         * going to create the new file that matches the size of the source image, as that's already been pre-sized
+         * to known good values.
+         * NOTE: THIS WILL SLOWLY BLUR THE IMAGE OVER TIME; THIS IS NOT A SOLUTION. */
         
-        UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil)
-        let imageView = UIImageView(image: screenshot)
-        if let data = screenshot.pngData() {
+        /* Start by resizing the screenshot relative to the source image.
+         * This is so that we can 'draw' the source image into a new UIImage, and then draw the screenshot overtop of it. */
+        let resizedRatio = sourceImage.size.height / screenshot.size.height;
+        let newSize = CGSize(width: screenshot.size.width * resizedRatio, height: screenshot.size.height * resizedRatio);
+        let resizedScreenshot = resizedImage(with: screenshot, for: newSize)!;
+        
+        UIGraphicsBeginImageContext(sourceImage.size)
+        let offset = CGPoint(x: (sourceImage.size.width - resizedScreenshot.size.width) / 2, y: (sourceImage.size.height - resizedScreenshot.size.height) / 2);
+        sourceImage.draw(in: CGRect(x: 0, y: 0, width: sourceImage.size.width, height: sourceImage.size.height))
+        resizedScreenshot.draw(at: offset);
+        let result = UIGraphicsGetImageFromCurrentImageContext()!;
+        UIGraphicsEndImageContext();
+                
+        UIImageWriteToSavedPhotosAlbum(result, nil, nil, nil)
+        //let imageView = UIImageView(image: image)
+        if let data = result.pngData() {
             let filename = getDocumentsDirectory().appendingPathComponent("\(Date().timeIntervalSinceReferenceDate).png")
             var dict: [String: String] = [String:String]()
             dict["path"] = filename.absoluteString
@@ -739,11 +803,27 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         return paths[0]
     }
     
-    public func didInitialize() {}
+    public func didInitialize() {
+        DispatchQueue.main.async {
+            
+            //let subview = self.deepAR.switchToRenderingToView(withFrame: self.windowFrame)!;
+            //subview.translatesAutoresizingMaskIntoConstraints = false
+            
+            //self.arView.addSubview(subview);
+            //self.deepAR.setRenderingResolutionWithWidth(Int(self.windowFrame.width), height: Int(self.windowFrame.height));
+            //self.childView = self.deepAR.switchToRenderingToView(withFrame: self.windowFrame);
+            //self.arView.addSubview(self.childView);
+            //self.arView.frame = self.windowFrame;
+        }
+    }
     
     public  func faceVisiblityDidChange(_ faceVisible: Bool) {
         searchingForFace = false;
         NSLog("Found Face!")
+    }
+    
+    public func snapPhoto() {
+        self.deepAR.takeScreenshot();
     }
     
 }
