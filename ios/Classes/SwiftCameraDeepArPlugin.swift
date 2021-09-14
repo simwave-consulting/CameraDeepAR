@@ -338,8 +338,8 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                     searchingForFace = true;
                     var mutableData = imageBytes.data;
                     mutableData.withUnsafeMutableBytes { (bytesRawPointer : UnsafeMutableRawBufferPointer) in
-                        let bytes = bytesRawPointer.baseAddress!.assumingMemoryBound(to: UInt8.self);
-                        let image = ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
+                        //let bytes = bytesRawPointer.baseAddress!.assumingMemoryBound(to: UInt8.self);
+                        let image: UIImage? = UIImage()//ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
                         let size = CGSize(width: 720, height: 1280);
                         let resizedImg = resizedImage(with: image!, for: size);
                         
