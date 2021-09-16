@@ -216,7 +216,6 @@ public class CameraDeepArView implements PlatformView,
             }
             result.success("Mask Changed");
         }
-
         else  if ("zoomTo".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({"unchecked"})
@@ -230,7 +229,6 @@ public class CameraDeepArView implements PlatformView,
             }
             result.success("ZoomTo Changed");
         }
-
         else  if ("changeMask".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({"unchecked"})
@@ -245,7 +243,8 @@ public class CameraDeepArView implements PlatformView,
                 
             }
             result.success("Mask Changed");
-        }else  if ("changeEffect".equals(methodCall.method)) {
+        }
+        else  if ("changeEffect".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({"unchecked"})
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
@@ -280,13 +279,11 @@ public class CameraDeepArView implements PlatformView,
             result.success("Photo Snapped");
         }
         else  if ("dispose".equals(methodCall.method)) {
-            disposed = true;
-            methodChannel.setMethodCallHandler(null);
-            deepAR.setAREventListener(null);
-            deepAR.release();
-            deepAR = null;
+            dispose();
+            //
             result.success("Disposed");
-        }else  if ("switchEffect".equals(methodCall.method)) {
+        }
+        else  if ("switchEffect".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({"unchecked"})
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
@@ -304,7 +301,8 @@ public class CameraDeepArView implements PlatformView,
                 }
             }
             result.success("Custom Effect Changed");
-        } else if ("changeParameterFloat".equals(methodCall.method)){
+        } 
+        else if ("changeParameterFloat".equals(methodCall.method)){
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({"unchecked"})
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
@@ -314,7 +312,8 @@ public class CameraDeepArView implements PlatformView,
                 Object floatParam = params.get("floatValue");
                 deepAR.changeParameterFloat(changeParameter.toString(), component.toString(), parameter.toString(), ((Double) floatParam).floatValue());
             }
-        } else if ("changeImage".equals(methodCall.method)){
+        } 
+        else if ("changeImage".equals(methodCall.method)){
             if (methodCall.arguments instanceof HashMap) {
              @SuppressWarnings({"unchecked"})
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
@@ -337,10 +336,11 @@ public class CameraDeepArView implements PlatformView,
             if (methodCall.arguments instanceof HashMap) {
              @SuppressWarnings({"unchecked"})
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
-                Object filePath = params.get("filePath");
+                String filePath = (String)params.get("filePath");
                 // NOTE: Kicked this out because we are not loading files from flutter's asset folder!
                  Log.d("File path is ", filePath.toString());
                 try{
+                changeImagePath(filePath);
                     Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
                     imageGrabber.loadBitmapFromGallery(bitmap, false);
                     this.searchingForFace = true;
@@ -371,7 +371,8 @@ public class CameraDeepArView implements PlatformView,
                     e.printStackTrace();
                 }
             }
-        } else if ("updateFrameAvailable".equals(methodCall.method)) {
+        } 
+        else if ("updateFrameAvailable".equals(methodCall.method)) {
             Log.d("DAMON", "Running Update Frame Available");
             BitmapDrawable bitmapDrawable = ((BitmapDrawable) offscreenView.getDrawable());
             Log.d("DAMON", "Drawable is " + bitmapDrawable.toString());
@@ -386,8 +387,28 @@ public class CameraDeepArView implements PlatformView,
             // imageGrabber.refreshBitmap();
             // imageGrabber.refreshBitmap();
         }
+    }
 
-
+    private void changeImagePath(String filePath)
+    {
+        if (imageGrabber != null)
+        {
+            try
+            {
+                Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
+                imageGrabber.loadBitmapFromGallery(bitmap, false);
+                this.searchingForFace = true;
+                this.checkForFace();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        else
+        {
+            final String finalPath = filePath;
+            this.m_handler.postDelayed(() -> changeImagePath(finalPath), this, 500);
+        }
     }
 
     private void checkForFace(){
@@ -573,15 +594,12 @@ public class CameraDeepArView implements PlatformView,
         });
     }
 
-
-
     private String getFilterPath(String filterName) {
         if (filterName.equals("none")) {
             return null;
         }
         return "file:///android_asset/" + filterName;
     }
-
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
@@ -594,7 +612,6 @@ public class CameraDeepArView implements PlatformView,
         } else {
             Log.e("ERROR", "No mode specified!");
         }
-
     }
 
     @Override
@@ -610,7 +627,6 @@ public class CameraDeepArView implements PlatformView,
         }
     }
 
-
     @Override
     public View getView() {
         return view;
@@ -621,12 +637,19 @@ public class CameraDeepArView implements PlatformView,
         if (disposed) {
             return;
         }
+
         disposed = true;
+
+        imageGrabber.setImageReceiver(null);
+        imageGrabber = null;
+        //
         methodChannel.setMethodCallHandler(null);
         deepAR.setAREventListener(null);
         deepAR.release();
         deepAR = null;
-
+        //
+        m_handler.removeCallbacksAndMessages(this);
+        m_handler = null;
     }
 
     @Override
