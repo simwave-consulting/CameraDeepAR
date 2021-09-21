@@ -93,14 +93,12 @@ public class LoadImageHandler {
             resizedBitmap = selectedImage.copy(selectedImage.getConfig(), true);
         }
 
-
         width = resizedBitmap.getWidth();
         height = resizedBitmap.getHeight();
 
         Log.d("DAMON", "HEIGHT: " + height + " WIDTH: " + width);
 
         byte[] nv21Bytes = getNV21(width, height, resizedBitmap);
-
 
         nv21bb = ByteBuffer.allocateDirect(nv21Bytes.length);
         nv21bb.order(ByteOrder.nativeOrder());
@@ -192,8 +190,6 @@ public class LoadImageHandler {
         return dest;
     }
 
-
-
     public static Bitmap rotateBitmap(Bitmap source, float angle)
     {
         Matrix matrix = new Matrix();
@@ -205,5 +201,4 @@ public class LoadImageHandler {
         String filename = "rotated"+System.currentTimeMillis()+".png";
         MediaStore.Images.Media.insertImage(mContext.get().getContentResolver(), bitmap, filename , "Description.");
     }
-
 }
