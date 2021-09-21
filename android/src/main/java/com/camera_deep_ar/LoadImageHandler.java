@@ -201,5 +201,4 @@ public class LoadImageHandler {
         String filename = "rotated"+System.currentTimeMillis()+".png";
         MediaStore.Images.Media.insertImage(mContext.get().getContentResolver(), bitmap, filename , "Description.");
     }
-
 }
