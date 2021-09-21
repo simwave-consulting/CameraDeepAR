@@ -407,7 +407,7 @@ public class CameraDeepArView implements PlatformView,
         else
         {
             final String finalPath = filePath;
-            this.m_handler.postDelayed(() -> changeImagePath(finalPath), this, 500);
+            this.m_handler.postDelayed(() -> changeImagePath(finalPath), this.m_handler, 500);
         }
     }
 
@@ -427,7 +427,7 @@ public class CameraDeepArView implements PlatformView,
         this.deepAR.setFaceDetectionSensitivity(sensitivity);
         this.imageGrabber.refreshBitmap();
         final int newSensitivity = sensitivity + 1;
-        this.m_handler.postDelayed( () -> checkForFace(newSensitivity), sensitivity * 1000);
+        this.m_handler.postDelayed( () -> checkForFace(newSensitivity), this.m_handler, sensitivity * 1000);
     }
 
     private void initializeFilters() {
@@ -648,7 +648,7 @@ public class CameraDeepArView implements PlatformView,
         deepAR.release();
         deepAR = null;
         //
-        m_handler.removeCallbacksAndMessages(this);
+        m_handler.removeCallbacksAndMessages(this.m_handler);
         m_handler = null;
     }
 
@@ -712,7 +712,9 @@ public class CameraDeepArView implements PlatformView,
     public void faceVisibilityChanged(boolean b) {
         Log.d("DAMON", "FACE VISIBILITY IS BEING CHECKED " + b);
         if (b)
+        {
             this.searchingForFace = false;
+        }
     }
 
     @Override
