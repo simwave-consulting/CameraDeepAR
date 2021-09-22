@@ -12,9 +12,11 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
+import android.media.ExifInterface;
 import android.media.Image;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -156,7 +158,6 @@ public class CameraDeepArView implements PlatformView,
         m_handler = new Handler(Looper.getMainLooper());
         methodChannel.setMethodCallHandler(this);
         checkPermissions();
-
     }
 
     private void checkPermissions(){
@@ -176,7 +177,7 @@ public class CameraDeepArView implements PlatformView,
         }
     }
 
-    private void initializeDeepAR(){
+    private void initializeDeepAR() {
         deepAR = new DeepAR(activity);
         deepAR.setLicenseKey(androidLicenceKey);
         deepAR.initialize(activity, this);
@@ -239,8 +240,6 @@ public class CameraDeepArView implements PlatformView,
                 Log.d("MASK", "" + masks.get(currentMask).toString());
                 
                 deepAR.switchEffect("mask", getFilterPath(masks.get(currentMask)));
-               
-                
             }
             result.success("Mask Changed");
         }
@@ -340,13 +339,7 @@ public class CameraDeepArView implements PlatformView,
                 // NOTE: Kicked this out because we are not loading files from flutter's asset folder!
                  Log.d("File path is ", filePath.toString());
                 try{
-                changeImagePath(filePath);
-                    Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
-                    imageGrabber.loadBitmapFromGallery(bitmap, false);
-                    this.searchingForFace = true;
-                    this.checkForFace();    
-                    // imageGrabber.refreshBitmap();
-                    // imageGrabber.refreshBitmap();
+                    changeImagePath(filePath);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -395,7 +388,12 @@ public class CameraDeepArView implements PlatformView,
         {
             try
             {
-                Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString()); //, options ////R.drawable.texture
+                ExifInterface exif = new ExifInterface(filePath);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_UNDEFINED);
+
+                Bitmap bitmap = rotateBitmap(BitmapFactory.decodeFile(filePath.toString()), orientation);
+
                 imageGrabber.loadBitmapFromGallery(bitmap, false);
                 this.searchingForFace = true;
                 this.checkForFace();
@@ -408,6 +406,50 @@ public class CameraDeepArView implements PlatformView,
         {
             final String finalPath = filePath;
             this.m_handler.postDelayed(() -> changeImagePath(finalPath), this.m_handler, 500);
+        }
+    }
+
+    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return bitmap;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+                return bitmap;
+        }
+        try {
+            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            bitmap.recycle();
+            return bmRotated;
+        }
+        catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
