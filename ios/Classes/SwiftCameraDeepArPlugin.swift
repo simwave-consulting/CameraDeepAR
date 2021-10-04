@@ -272,7 +272,33 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                     }
                 }
                 result("Param Changed")
-            } else if call.method == "changeParameterTexture" {
+            }
+            else if call.method == "changeParameterVec4" {
+                if let dict = call.arguments as? [String: Any] {
+                    if let changeParameter = (dict["changeParameter"] as? String) {
+                        if let component = (dict["component"] as? String){
+                            if let parameter = (dict["parameter"] as? String){
+                                if let valX = (dict["valX"] as? Double){
+                                    if let valY = (dict["valY"] as? Double){
+                                        if let valZ = (dict["valZ"] as? Double){
+                                            if let valW = (dict["valW"] as? Double){
+                                                let x = Float(valX);
+                                                let y = Float(valY);
+                                                let z = Float(valZ);
+                                                let w = Float(valW);
+                                                let vec4 = Vector4(x: x, y: y, z: z, w: w);
+                                                self.deepAR.changeParameter(changeParameter,component:component,parameter:parameter, vectorValue: vec4);
+                                            }   
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                result("Param Changed")
+            } 
+            else if call.method == "changeParameterTexture" {
                 if let dict = call.arguments as? [String: Any] {
                     if let changeParameter = (dict["changeParameter"] as? String) {
                         if let component = (dict["component"] as? String){
