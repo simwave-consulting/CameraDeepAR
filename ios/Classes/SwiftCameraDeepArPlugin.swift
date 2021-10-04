@@ -151,7 +151,6 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         modeValue=""
         directionValue=""
         channel = FlutterMethodChannel(name: "plugins.flutter.io/deep_ar_camera/\(viewId)", binaryMessenger: messenger)
-        windowFrame = CGRect.zero
         super.init()
         
         NotificationCenter.default.addObserver(self, selector: #selector(orientationDidChange), name:  Notification.Name("UIDeviceOrientationDidChangeNotification"), object: nil)
