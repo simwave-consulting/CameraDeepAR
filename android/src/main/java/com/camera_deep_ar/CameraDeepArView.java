@@ -401,8 +401,10 @@ public class CameraDeepArView
                 ExifInterface exif = new ExifInterface(filePath);
                 int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
                         ExifInterface.ORIENTATION_UNDEFINED);
+                Log.d("DEEPAR", "Image orientation is " + orientation);
 
-                Bitmap bitmap = rotateBitmap(BitmapFactory.decodeFile(filePath.toString()), orientation);
+                //Bitmap bitmap = rotateBitmap(BitmapFactory.decodeFile(filePath.toString()), orientation);
+                Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString());
 
                 imageGrabber.loadBitmapFromGallery(bitmap, false);
                 this.searchingForFace = true;
