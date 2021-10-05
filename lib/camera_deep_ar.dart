@@ -376,6 +376,25 @@ class CameraDeepArController {
     });
   }
 
+  Future changeParameterVec4(
+      String changeParameter,
+      String component,
+      String parameter,
+      double valX,
+      double valY,
+      double valZ,
+      double valW) async {
+    return channel.invokeMethod('changeParameterVec4', <String, dynamic>{
+      'changeParameter': changeParameter,
+      'component': component,
+      'parameter': parameter,
+      'valX': valX,
+      'valY': valY,
+      'valZ': valZ,
+      'valW': valW,
+    });
+  }
+
   Future updateFrameAvailable() async {
     return channel.invokeMethod('updateFrameAvailable');
   }
