@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -133,9 +134,13 @@ class _CameraDeepArState extends State<CameraDeepAr> {
 
   @override
   void dispose() async {
-    print("Camera deepAR DART FILE DESTROYEDDDDD!");
-    await _controller.dispose();
     super.dispose();
+
+    // iOS has no dispose mechanism, so we're invoking it here to maintain consistency.
+    if (Platform.isIOS) {
+      /* super.dispose() must be called before any 'await Future' when inside an async dispose. */
+      await _controller.dispose();
+    }
   }
 
   @override

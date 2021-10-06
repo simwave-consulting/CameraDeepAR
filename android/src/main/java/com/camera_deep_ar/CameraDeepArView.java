@@ -629,16 +629,27 @@ public class CameraDeepArView
 
         disposed = true;
 
-        imageGrabber.setImageReceiver(null);
-        imageGrabber = null;
+        if (imageGrabber != null) {
+            imageGrabber.setImageReceiver(null);
+            imageGrabber = null;
+        }
+
         //
-        methodChannel.setMethodCallHandler(null);
-        deepAR.setAREventListener(null);
-        deepAR.release();
-        deepAR = null;
+        if (methodChannel != null) {
+            methodChannel.setMethodCallHandler(null);
+        }
+
+        if (deepAR != null) {
+            deepAR.setAREventListener(null);
+            deepAR.release();
+            deepAR = null;
+        }
+
         //
-        m_handler.removeCallbacksAndMessages(this.m_handler);
-        m_handler = null;
+        if (m_handler != null) {
+            m_handler.removeCallbacksAndMessages(this.m_handler);
+            m_handler = null;
+        }
     }
 
     @Override
