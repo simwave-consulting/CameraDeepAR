@@ -317,11 +317,7 @@ public class CameraDeepArView
                 try {
                     Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length); // , options
                                                                                                      // ////R.drawable.texture
-                    imageGrabber.loadBitmapFromGallery(bitmap, false);
-                    this.searchingForFace = true;
-                    this.checkForFace();
-                    // imageGrabber.refreshBitmap();
-                    // imageGrabber.refreshBitmap();
+                    changeImage(bitmap);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -385,79 +381,27 @@ public class CameraDeepArView
             Bitmap bitmap = bitmapDrawable.getBitmap();
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            // byte[] imageInByte = stream.toByteArray();
-            // ByteArrayInputStream bis = new ByteArrayInputStream(imageInByte);
+
+            changeImage(bitmap);
+        }
+    }
+
+    private void changeImage(Bitmap bitmap) {
+        if (imageGrabber != null) {
             imageGrabber.loadBitmapFromGallery(bitmap, false);
             this.searchingForFace = true;
             this.checkForFace();
-            // imageGrabber.refreshBitmap();
-            // imageGrabber.refreshBitmap();
+        } else {
+            this.m_handler.postDelayed(() -> changeImage(bitmap), this.m_handler, 500);
         }
     }
 
     private void changeImagePath(String filePath) {
-        if (imageGrabber != null) {
-            try {
-                ExifInterface exif = new ExifInterface(filePath);
-                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
-                        ExifInterface.ORIENTATION_UNDEFINED);
-                Log.d("DEEPAR", "Image orientation is " + orientation);
-
-                //Bitmap bitmap = rotateBitmap(BitmapFactory.decodeFile(filePath.toString()), orientation);
-                Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString());
-
-                imageGrabber.loadBitmapFromGallery(bitmap, false);
-                this.searchingForFace = true;
-                this.checkForFace();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            final String finalPath = filePath;
-            this.m_handler.postDelayed(() -> changeImagePath(finalPath), this.m_handler, 500);
-        }
-    }
-
-    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
-
-        Matrix matrix = new Matrix();
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_NORMAL:
-                return bitmap;
-            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
-                matrix.setScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_180:
-                matrix.setRotate(180);
-                break;
-            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
-                matrix.setRotate(180);
-                matrix.postScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_TRANSPOSE:
-                matrix.setRotate(90);
-                matrix.postScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                matrix.setRotate(90);
-                break;
-            case ExifInterface.ORIENTATION_TRANSVERSE:
-                matrix.setRotate(-90);
-                matrix.postScale(-1, 1);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                matrix.setRotate(-90);
-                break;
-            default:
-                return bitmap;
-        }
         try {
-            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-            bitmap.recycle();
-            return bmRotated;
-        } catch (OutOfMemoryError e) {
+            Bitmap bitmap = BitmapFactory.decodeFile(filePath.toString());
+            changeImage(bitmap);
+        } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
     }
 
