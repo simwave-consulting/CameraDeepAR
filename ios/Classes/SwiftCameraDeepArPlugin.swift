@@ -137,6 +137,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     private var cameraController: CameraController!
     
     deinit {
+        dispose();
     }
     
     @objc init(messenger: FlutterBinaryMessenger,  registrar: FlutterPluginRegistrar, frame: CGRect, viewId: Int64, args: Any?){
@@ -171,7 +172,6 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             self.mode = mode;
             //currentRecordingMode = .photo
         }
-        
         
         channel.setMethodCallHandler { [self] call, result in
             if call.method == "isCameraReady" {
@@ -240,10 +240,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                 self.snapPhoto();
                 result("You Tapped on SnapPhoto")
             } else if call.method == "dispose" {
-                searchingForFace = false;
-                NotificationCenter.default.removeObserver(self);
-                channel.setMethodCallHandler(nil);
-                self.arView.shutdown();
+                dispose();
                 result("You Tapped on SnapPhoto")
             } else if call.method == "switchEffect" {
                 if let dict = call.arguments as? [String: Any] {
@@ -287,7 +284,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                                                 let w = Float(valW);
                                                 let vec4 = Vector4(x: x, y: y, z: z, w: w);
                                                 self.deepAR.changeParameter(changeParameter,component:component,parameter:parameter, vectorValue: vec4);
-                                            }   
+                                            }
                                         }
                                     }
                                 }
@@ -296,7 +293,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                     }
                 }
                 result("Param Changed")
-            } 
+            }
             else if call.method == "changeParameterTexture" {
                 if let dict = call.arguments as? [String: Any] {
                     if let changeParameter = (dict["changeParameter"] as? String) {
@@ -326,22 +323,15 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             } else if call.method == "changeImage" {
                 if let dict = call.arguments as? [String: Any] {
                     let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
-                    let width = dict["width"] as! Int;
-                    let height = dict["height"] as! Int;
-                    NSLog("TYPE OF: \(type(of: imageBytes)). Width: \(width) Height: \(height) Data: \(imageBytes.data.base64EncodedString())");
-                    searchingForFace = true;
-                    var mutableData = imageBytes.data;
-                    mutableData.withUnsafeMutableBytes { (bytesRawPointer : UnsafeMutableRawBufferPointer) in
-                        //let bytes = bytesRawPointer.baseAddress!.assumingMemoryBound(to: UInt8.self);
-                        let image: UIImage? = UIImage()//ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
-                        let size = CGSize(width: 720, height: 1280);
-                        let resizedImg = resizedImage(with: image!, for: size);
-                        
-                        enqueueFrame(buffer(from: resizedImg!));
-                    }
+                    
+                    let dataProvider = CGDataProvider.init(data: imageBytes.data as CFData)!;
+                    let cgImage = CGImage.init(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!;
+                    let image = UIImage.init(cgImage: cgImage);
+                    
+                    changeImage(to: image);
                 }
+                result("Param Changed")
             }
-            result("Param Changed")
             
         }
         if #available(iOS 9.0, *) {
@@ -357,6 +347,10 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
             return
         }
         
+        changeImage(to: image);
+    }
+    
+    func changeImage(to image: UIImage) -> Void {
         let byteWidth = CGFloat(numOfChannels * bytesPerChannel);
         let adjustedWidth = round(image.size.width / byteWidth) * byteWidth;
         let ratio = adjustedWidth / image.size.width;
@@ -707,6 +701,13 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     }
     
     public func didInitialize() {
+    }
+    
+    public func dispose() {
+        searchingForFace = false;
+        NotificationCenter.default.removeObserver(self);
+        channel.setMethodCallHandler(nil);
+        self.arView.shutdown();
     }
     
     public func faceVisiblityDidChange(_ faceVisible: Bool) {

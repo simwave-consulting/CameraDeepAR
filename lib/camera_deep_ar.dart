@@ -132,8 +132,9 @@ class _CameraDeepArState extends State<CameraDeepAr> {
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     print("Camera deepAR DART FILE DESTROYEDDDDD!");
+    await _controller.dispose();
     super.dispose();
   }
 
