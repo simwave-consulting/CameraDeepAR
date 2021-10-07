@@ -325,7 +325,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                     let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
                     
                     let dataProvider = CGDataProvider.init(data: imageBytes.data as CFData)!;
-                    let cgImage = CGImage.init(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!;
+                    let cgImage = CGImage.init(pngDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!;
                     let image = UIImage.init(cgImage: cgImage);
                     
                     changeImage(to: image);

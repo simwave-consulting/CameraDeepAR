@@ -357,9 +357,12 @@ class CameraDeepArController {
     });
   }
 
-  Future changeImage(Uint8List imageBytes) async {
-    return channel.invokeMethod(
-        'changeImage', <String, dynamic>{'imageBytes': imageBytes});
+  Future changeImage(Uint8List imageBytes, int width, int height) async {
+    return channel.invokeMethod('changeImage', <String, dynamic>{
+      'imageBytes': imageBytes,
+      'width': width,
+      'height': height,
+    });
   }
 
   Future changeImagePath(String filePath) async {
