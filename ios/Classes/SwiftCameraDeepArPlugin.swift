@@ -93,8 +93,7 @@ public class DeepArCameraViewFactory: NSObject, FlutterPlatformViewFactory {
 
 
 //The main view for DeepAr Camera
-public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
-    
+public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     
     let messenger: FlutterBinaryMessenger
     let frame: CGRect
@@ -135,10 +134,6 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
     // This class handles camera interaction. Start/stop feed, check permissions etc. You can use it or you
     // can provide your own implementation
     private var cameraController: CameraController!
-    
-    deinit {
-        dispose();
-    }
     
     @objc init(messenger: FlutterBinaryMessenger,  registrar: FlutterPluginRegistrar, frame: CGRect, viewId: Int64, args: Any?){
         self.messenger=messenger
@@ -241,7 +236,7 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
                 result("You Tapped on SnapPhoto")
             } else if call.method == "dispose" {
                 dispose();
-                result("You Tapped on SnapPhoto")
+                result("View was disposed!")
             } else if call.method == "switchEffect" {
                 if let dict = call.arguments as? [String: Any] {
                     if let mode = (dict["mode"] as? String) {
@@ -707,7 +702,11 @@ public class DeepArCameraView : NSObject,FlutterPlatformView,DeepARDelegate {
         searchingForFace = false;
         NotificationCenter.default.removeObserver(self);
         channel.setMethodCallHandler(nil);
-        self.arView.shutdown();
+        
+        if (self.arView != nil)
+        {
+            self.arView.shutdown();
+        }
     }
     
     public func faceVisiblityDidChange(_ faceVisible: Bool) {

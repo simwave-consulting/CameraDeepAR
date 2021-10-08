@@ -136,11 +136,19 @@ class _CameraDeepArState extends State<CameraDeepAr> {
   void dispose() async {
     super.dispose();
 
-    // iOS has no dispose mechanism, so we're invoking it here to maintain consistency.
-    if (Platform.isIOS) {
-      /* super.dispose() must be called before any 'await Future' when inside an async dispose. */
-      await _controller.dispose();
-    }
+    /* On Android, dispose() will be invoked automatically, and the underlying 
+       * FlutterPlatformView will be disposed.
+       * 
+       * On iOS, the FlutterPlatformView will persist until arView.shutdown() is 
+       * called, which is done via CameraDeepArController::dispose(). However, we 
+       * need to invoke CameraDeepArController::dispose() manually, or else it 
+       * will never be called. */
+    try {
+      if (Platform.isIOS) {
+        /* super.dispose() must be called before any 'await Future' when inside an async dispose. */
+        await _controller.dispose();
+      }
+    } catch (e) {}
   }
 
   @override
