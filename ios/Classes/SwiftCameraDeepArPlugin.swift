@@ -318,12 +318,15 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
             } else if call.method == "changeImage" {
                 if let dict = call.arguments as? [String: Any] {
                     let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
-                    
-                    let dataProvider = CGDataProvider.init(data: imageBytes.data as CFData)!;
-                    let cgImage = CGImage.init(pngDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!;
-                    let image = UIImage.init(cgImage: cgImage);
-                    
-                    changeImage(to: image);
+                    let width = dict["width"] as! Int;
+                    let height = dict["height"] as! Int;
+
+                    var mutableData = imageBytes.data;
+                    mutableData.withUnsafeMutableBytes { (bytesRawPointer : UnsafeMutableRawBufferPointer) in
+                        let bytes = bytesRawPointer.baseAddress!.assumingMemoryBound(to: UInt8.self);
+                        let image: UIImage? = ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
+                        changeImage(to: image!);
+                    }
                 }
                 result("Param Changed")
             }
