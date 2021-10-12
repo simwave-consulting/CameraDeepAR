@@ -396,12 +396,21 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     }
     
     func enqueueFrame(_ sampleBuffer: CVPixelBuffer?) {
+        enqueueFrame(sampleBuffer, sensitivity: 1);
+    }
+    
+    func enqueueFrame(_ sampleBuffer: CVPixelBuffer?, sensitivity: Int) {
         if !searchingForFace {
             return
         }
-        self.deepAR.processFrame(sampleBuffer, mirror: false)
+        
+        let newSensitivity = min(max(sensitivity, 1), 3);
+        
+        self.deepAR.setFaceDetectionSensitivity(newSensitivity);
+        self.deepAR.processFrame(sampleBuffer, mirror: false);
+        
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.5 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: { [self] in
-            enqueueFrame(sampleBuffer)
+            enqueueFrame(sampleBuffer, sensitivity: newSensitivity + 1)
         })
     }
     
@@ -688,8 +697,8 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
             let filename = getDocumentsDirectory().appendingPathComponent("\(Date().timeIntervalSinceReferenceDate).png")
             var dict: [String: String] = [String:String]()
             dict["path"] = filename.absoluteString
-            channel.invokeMethod("onSnapPhotoCompleted", arguments: dict)
             try? data.write(to: filename)
+            channel.invokeMethod("onSnapPhotoCompleted", arguments: dict)
         }
     }
     
