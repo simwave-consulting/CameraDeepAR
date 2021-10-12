@@ -161,7 +161,7 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
             
             print(direction)
             self.licenceKey = licence
-            self.currentMode=Mode.allCases[cameraMode];
+            self.currentMode = Mode.allCases[cameraMode];
             self.currentRecordingMode = RecordingMode.allCases[recordingMode]
             self.cameraController.position = direction == 0 ? .back : .front
             self.mode = mode;
@@ -350,9 +350,12 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     
     func changeImage(to image: UIImage) -> Void {
         let byteWidth = CGFloat(numOfChannels * bytesPerChannel);
-        let adjustedWidth = round(image.size.width / byteWidth) * byteWidth;
-        let ratio = adjustedWidth / image.size.width;
-        let adjustedHeight = round(ratio * image.size.height);
+        let scaledWidth = image.size.width * UIScreen.main.scale;
+        let scaledHeight = image.size.height * UIScreen.main.scale;
+        
+        let adjustedWidth = round(scaledWidth / byteWidth) * byteWidth;
+        let ratio = adjustedWidth / scaledWidth;
+        let adjustedHeight = round(ratio * scaledHeight);
         
         let size = CGSize(width: adjustedWidth, height: adjustedHeight);
         let resized = resizedImage(with: image, for: size)!;
