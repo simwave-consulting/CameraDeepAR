@@ -49,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -313,11 +314,24 @@ public class CameraDeepArView
                 @SuppressWarnings({ "unchecked" })
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
                 byte[] imageBytes = (byte[]) params.get("imageBytes");
+                int width = (int)params.get("width");
+                int height = (int)params.get("height");
 
                 try {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length); // , options
-                                                                                                     // ////R.drawable.texture
+                    // ImageBytes features uncompressed data so we have to make the bitmap manually and feed in the bytes.
+                    // Previously, we had used BitmapFactory.decodeByteArray, but it expects compressed data only.
+                    Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(imageBytes);
+                    byteBuffer.rewind();
+
+                    bitmap.copyPixelsFromBuffer(byteBuffer);
+
                     changeImage(bitmap);
+
+                    // We created the bitmap, so we are responsible for cleaning it up.
+                    bitmap.recycle();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
