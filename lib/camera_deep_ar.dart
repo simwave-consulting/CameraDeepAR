@@ -248,8 +248,6 @@ class CameraDeepArController {
         _cameraDeepArState.onVideoRecorded(path);
         break;
       case "onSnapPhotoCompleted":
-        print(
-            "Has bytes? ${(call.arguments['imageBytes'] != null ? "yes" : "no")}");
         Uint8List imageBytes = call.arguments['imageBytes'] as Uint8List;
         _cameraDeepArState.onImageCaptured(imageBytes);
         break;
