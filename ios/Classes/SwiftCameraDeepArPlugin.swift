@@ -558,7 +558,7 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     }
     
     @available(iOS 9.0, *)
-    @objc func  initCameraDeepAR(){
+    @objc func  initCameraDeepAR() {
         self.deepAR.delegate = self
         self.deepAR.setLicenseKey(self.licenceKey)
         cameraController.deepAR = self.deepAR

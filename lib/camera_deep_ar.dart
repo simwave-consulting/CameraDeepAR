@@ -5,10 +5,9 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 
 typedef void CameraDeepArCallback(CameraDeepArController controller);
-typedef void OnImageCaptured(img.Image image);
+typedef void OnImageCaptured(Uint8List imageBytes);
 typedef void OnVideoRecorded(String path);
 typedef void OnCameraReady(bool isCameraReady);
 
@@ -189,8 +188,8 @@ class _CameraDeepArState extends State<CameraDeepAr> {
     _controller = controller;
   }
 
-  void onImageCaptured(img.Image image) {
-    widget.onImageCaptured(image);
+  void onImageCaptured(Uint8List imageBytes) {
+    widget.onImageCaptured(imageBytes);
   }
 
   void onVideoRecorded(String path) {
@@ -255,12 +254,7 @@ class CameraDeepArController {
         int width = call.arguments['width'] as int;
         int height = call.arguments['height'] as int;
 
-        print("Decoding image...");
-        //img.Image image = img.Image.fromBytes(width, height, imageBytes);
-        img.Image image = img.decodePng(imageBytes)!;
-        print("Image decoded.");
-
-        _cameraDeepArState.onImageCaptured(image);
+        _cameraDeepArState.onImageCaptured(imageBytes);
         break;
       default:
         throw MissingPluginException();
