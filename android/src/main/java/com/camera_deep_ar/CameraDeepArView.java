@@ -274,7 +274,7 @@ public class CameraDeepArView
             deepAR.stopVideoRecording();
             result.success("Video Recording Stopped");
         } else if ("snapPhoto".equals(methodCall.method)) {
-            deepAR.takeScreenshot();
+            snapPhoto();
             result.success("Photo Snapped");
         } else if ("dispose".equals(methodCall.method)) {
             dispose();
@@ -666,21 +666,19 @@ public class CameraDeepArView
         }
     }
 
+    public void snapPhoto()
+    {
+        deepAR.takeScreenshot();
+    }
+
     @Override
     public void screenshotTaken(Bitmap bitmap) {
-        CharSequence now = DateFormat.format("yyyy_MM_dd_hh_mm_ss", new Date());
         try {
-            File imageFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                    + "/DeepAR_" + now + ".jpg");
-            FileOutputStream outputStream = new FileOutputStream(imageFile);
-            int quality = 100;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
-            outputStream.flush();
-            outputStream.close();
-            MediaScannerConnection.scanFile(context, new String[] { imageFile.toString() }, null, null);
-            // Toast.makeText(context, "Screenshot saved", Toast.LENGTH_SHORT).show();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, out);
+
             Map<String, Object> argument = new HashMap<>();
-            argument.put("path", imageFile.toString());
+            argument.put("imageBytes", out.toByteArray());
             methodChannel.invokeMethod("onSnapPhotoCompleted", argument);
         } catch (Throwable e) {
             e.printStackTrace();

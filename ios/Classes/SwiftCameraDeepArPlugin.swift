@@ -128,6 +128,8 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     
     private let numOfChannels: Int = 4
     private let bytesPerChannel: Int = 4;
+    private var currentBufferSampleHash : Int = 0;
+
     
     private var imageFrame: CGRect!
     
@@ -399,11 +401,12 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     }
     
     func enqueueFrame(_ sampleBuffer: CVPixelBuffer?) {
+        currentBufferSampleHash = sampleBuffer.hashValue;
         enqueueFrame(sampleBuffer, sensitivity: 1);
     }
     
     func enqueueFrame(_ sampleBuffer: CVPixelBuffer?, sensitivity: Int) {
-        if !searchingForFace {
+        if !searchingForFace || currentBufferSampleHash != sampleBuffer.hashValue {
             return
         }
         
@@ -695,12 +698,13 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     public func recordingFailedWithError(_ error: Error!) {}
     
     public func didTakeScreenshot(_ screenshot: UIImage!) {
-        UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil)
         if let data = screenshot.pngData() {
-            let filename = getDocumentsDirectory().appendingPathComponent("\(Date().timeIntervalSinceReferenceDate).png")
-            var dict: [String: String] = [String:String]()
-            dict["path"] = filename.absoluteString
-            try? data.write(to: filename)
+            let flutterData: FlutterStandardTypedData = FlutterStandardTypedData.init(bytes: data);
+            
+            var dict: [String: Any] = [String:Any]()
+            dict["imageBytes"] = flutterData;
+            dict["width"] = Int(screenshot.size.width);
+            dict["height"] = Int(screenshot.size.height);
             channel.invokeMethod("onSnapPhotoCompleted", arguments: dict)
         }
     }
