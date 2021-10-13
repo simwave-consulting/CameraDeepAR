@@ -51,7 +51,7 @@ public class LoadImageHandler {
 
     void refreshBitmap(boolean scale) {
         if (lastImage != null) {
-            uploadBitmapToDeepAR(lastImage, lastRotate, scale );
+            uploadBitmapToDeepAR(lastImage, lastRotate, scale);
         }
     }
 
@@ -63,7 +63,7 @@ public class LoadImageHandler {
         lastImage = bitmap;
         if (lastImage != null) {
             lastRotate = false;
-            uploadBitmapToDeepAR(bitmap, scale);
+            uploadBitmapToDeepAR(bitmap, lastRotate, scale);
         }
     }
 
@@ -86,11 +86,24 @@ public class LoadImageHandler {
             if (newHeight > 1280) newHeight = 1280;
             if (newWidth > 720) newWidth = 720;
 
-            resizedBitmap = scaleCenterCrop(selectedImage, newHeight, newWidth);
+            resizedBitmap = scaleCenterCrop(selectedImage, newWidth, newHeight);
         }
         else
         {
-            resizedBitmap = selectedImage.copy(selectedImage.getConfig(), true);
+            int width = selectedImage.getWidth();
+            int height = selectedImage.getHeight();
+
+            if (width % 2 == 1) width++;
+            if (height % 2 == 1) height++;
+
+            if (width != selectedImage.getWidth() || height != selectedImage.getHeight())
+            {
+                resizedBitmap = scaleCenterCrop(selectedImage, width, height);
+            }
+            else
+            {
+                resizedBitmap = selectedImage.copy(selectedImage.getConfig(), true);
+            }
         }
 
         width = resizedBitmap.getWidth();
@@ -123,7 +136,7 @@ public class LoadImageHandler {
 
         scaled.getPixels(argb, 0, inputWidth, 0, 0, inputWidth, inputHeight);
 
-        byte [] yuv = new byte[(inputWidth * inputHeight * 3 ) / 2];
+        byte [] yuv = new byte[(inputWidth * inputHeight * 3) / 2];
         encodeYUV420SP(yuv, argb, inputWidth, inputHeight);
 
         scaled.recycle();
@@ -145,7 +158,7 @@ public class LoadImageHandler {
                 a = (argb[index] & 0xff000000) >> 24; // a is not used obviously
                 R = (argb[index] & 0xff0000) >> 16;
                 G = (argb[index] & 0xff00) >> 8;
-                B = (argb[index] & 0xff) >> 0;
+                B = (argb[index] & 0xff);
 
                 // well known RGB to YUV algorithm
                 Y = ( (  66 * R + 129 * G +  25 * B + 128) >> 8) +  16;
@@ -155,10 +168,10 @@ public class LoadImageHandler {
                 // NV21 has a plane of Y and interleaved planes of VU each sampled by a factor of 2
                 //    meaning for every 4 Y pixels there are 1 V and 1 U.  Note the sampling is every other
                 //    pixel AND every other scanline.
-                yuv420sp[yIndex++] = (byte) ((Y < 0) ? 0 : ((Y > 255) ? 255 : Y));
+                yuv420sp[yIndex++] = (byte) ((Y < 0) ? 0 : (Math.min(Y, 255)));
                 if (j % 2 == 0 && index % 2 == 0) {
-                    yuv420sp[uvIndex++] = (byte)((V<0) ? 0 : ((V > 255) ? 255 : V));
-                    yuv420sp[uvIndex++] = (byte)((U<0) ? 0 : ((U > 255) ? 255 : U));
+                    yuv420sp[uvIndex++] = (byte)((V<0) ? 0 : (Math.min(V, 255)));
+                    yuv420sp[uvIndex++] = (byte)((U<0) ? 0 : (Math.min(U, 255)));
                 }
 
                 index ++;
@@ -166,7 +179,7 @@ public class LoadImageHandler {
         }
     }
 
-    public static Bitmap scaleCenterCrop(Bitmap source, int newHeight, int newWidth) {
+    public static Bitmap scaleCenterCrop(Bitmap source, int newWidth, int newHeight) {
         int sourceWidth = source.getWidth();
         int sourceHeight = source.getHeight();
 

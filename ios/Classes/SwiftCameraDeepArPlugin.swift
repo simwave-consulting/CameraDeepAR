@@ -703,8 +703,6 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
             
             var dict: [String: Any] = [String:Any]()
             dict["imageBytes"] = flutterData;
-            dict["width"] = Int(screenshot.size.width);
-            dict["height"] = Int(screenshot.size.height);
             channel.invokeMethod("onSnapPhotoCompleted", arguments: dict)
         }
     }

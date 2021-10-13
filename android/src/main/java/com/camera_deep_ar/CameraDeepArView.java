@@ -329,14 +329,11 @@ public class CameraDeepArView
 
                     changeImage(bitmap);
 
-                    // We created the bitmap, so we are responsible for cleaning it up.
-                    bitmap.recycle();
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-
+            result.success("Image changed!");
         } else if ("changeImagePath".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({ "unchecked" })
@@ -351,6 +348,7 @@ public class CameraDeepArView
                     e.printStackTrace();
                 }
             }
+            result.success("Image path changed!");
         } else if ("changeParameterTexture".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({ "unchecked" })

@@ -251,9 +251,6 @@ class CameraDeepArController {
         print(
             "Has bytes? ${(call.arguments['imageBytes'] != null ? "yes" : "no")}");
         Uint8List imageBytes = call.arguments['imageBytes'] as Uint8List;
-        int width = call.arguments['width'] as int;
-        int height = call.arguments['height'] as int;
-
         _cameraDeepArState.onImageCaptured(imageBytes);
         break;
       default:
