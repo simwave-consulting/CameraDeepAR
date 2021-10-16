@@ -16,3 +16,9 @@ build/
 
 .settings/
 **/.settings/
+
+.project
+**/.project
+
+.classpath
+**/.classpath

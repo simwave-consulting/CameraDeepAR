@@ -128,6 +128,8 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     
     private let numOfChannels: Int = 4
     private let bytesPerChannel: Int = 4;
+    private var currentBufferSampleHash : Int = 0;
+
     
     private var imageFrame: CGRect!
     
@@ -161,7 +163,7 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
             
             print(direction)
             self.licenceKey = licence
-            self.currentMode=Mode.allCases[cameraMode];
+            self.currentMode = Mode.allCases[cameraMode];
             self.currentRecordingMode = RecordingMode.allCases[recordingMode]
             self.cameraController.position = direction == 0 ? .back : .front
             self.mode = mode;
@@ -318,12 +320,15 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
             } else if call.method == "changeImage" {
                 if let dict = call.arguments as? [String: Any] {
                     let imageBytes = dict["imageBytes"] as! FlutterStandardTypedData;
-                    
-                    let dataProvider = CGDataProvider.init(data: imageBytes.data as CFData)!;
-                    let cgImage = CGImage.init(pngDataProviderSource: dataProvider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)!;
-                    let image = UIImage.init(cgImage: cgImage);
-                    
-                    changeImage(to: image);
+                    let width = dict["width"] as! Int;
+                    let height = dict["height"] as! Int;
+
+                    var mutableData = imageBytes.data;
+                    mutableData.withUnsafeMutableBytes { (bytesRawPointer : UnsafeMutableRawBufferPointer) in
+                        let bytes = bytesRawPointer.baseAddress!.assumingMemoryBound(to: UInt8.self);
+                        let image: UIImage? = ImageHelper.convertBitmapRGBA8(toUIImage: bytes, withWidth: Int32(width), withHeight: Int32(height));
+                        changeImage(to: image!);
+                    }
                 }
                 result("Param Changed")
             }
@@ -347,9 +352,12 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     
     func changeImage(to image: UIImage) -> Void {
         let byteWidth = CGFloat(numOfChannels * bytesPerChannel);
-        let adjustedWidth = round(image.size.width / byteWidth) * byteWidth;
-        let ratio = adjustedWidth / image.size.width;
-        let adjustedHeight = round(ratio * image.size.height);
+        let scaledWidth = image.size.width * UIScreen.main.scale;
+        let scaledHeight = image.size.height * UIScreen.main.scale;
+        
+        let adjustedWidth = round(scaledWidth / byteWidth) * byteWidth;
+        let ratio = adjustedWidth / scaledWidth;
+        let adjustedHeight = round(ratio * scaledHeight);
         
         let size = CGSize(width: adjustedWidth, height: adjustedHeight);
         let resized = resizedImage(with: image, for: size)!;
@@ -393,12 +401,22 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     }
     
     func enqueueFrame(_ sampleBuffer: CVPixelBuffer?) {
-        if !searchingForFace {
+        currentBufferSampleHash = sampleBuffer.hashValue;
+        enqueueFrame(sampleBuffer, sensitivity: 1);
+    }
+    
+    func enqueueFrame(_ sampleBuffer: CVPixelBuffer?, sensitivity: Int) {
+        if !searchingForFace || currentBufferSampleHash != sampleBuffer.hashValue {
             return
         }
-        self.deepAR.processFrame(sampleBuffer, mirror: false)
+        
+        let newSensitivity = min(max(sensitivity, 1), 3);
+        
+        self.deepAR.setFaceDetectionSensitivity(newSensitivity);
+        self.deepAR.processFrame(sampleBuffer, mirror: false);
+        
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(0.5 * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: { [self] in
-            enqueueFrame(sampleBuffer)
+            enqueueFrame(sampleBuffer, sensitivity: newSensitivity + 1)
         })
     }
     
@@ -540,7 +558,7 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     }
     
     @available(iOS 9.0, *)
-    @objc func  initCameraDeepAR(){
+    @objc func  initCameraDeepAR() {
         self.deepAR.delegate = self
         self.deepAR.setLicenseKey(self.licenceKey)
         cameraController.deepAR = self.deepAR
@@ -680,13 +698,12 @@ public class DeepArCameraView : NSObject, FlutterPlatformView, DeepARDelegate {
     public func recordingFailedWithError(_ error: Error!) {}
     
     public func didTakeScreenshot(_ screenshot: UIImage!) {
-        UIImageWriteToSavedPhotosAlbum(screenshot, nil, nil, nil)
         if let data = screenshot.pngData() {
-            let filename = getDocumentsDirectory().appendingPathComponent("\(Date().timeIntervalSinceReferenceDate).png")
-            var dict: [String: String] = [String:String]()
-            dict["path"] = filename.absoluteString
+            let flutterData: FlutterStandardTypedData = FlutterStandardTypedData.init(bytes: data);
+            
+            var dict: [String: Any] = [String:Any]()
+            dict["imageBytes"] = flutterData;
             channel.invokeMethod("onSnapPhotoCompleted", arguments: dict)
-            try? data.write(to: filename)
         }
     }
     

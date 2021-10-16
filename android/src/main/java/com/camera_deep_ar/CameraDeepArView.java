@@ -49,6 +49,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -273,7 +274,7 @@ public class CameraDeepArView
             deepAR.stopVideoRecording();
             result.success("Video Recording Stopped");
         } else if ("snapPhoto".equals(methodCall.method)) {
-            deepAR.takeScreenshot();
+            snapPhoto();
             result.success("Photo Snapped");
         } else if ("dispose".equals(methodCall.method)) {
             dispose();
@@ -313,16 +314,26 @@ public class CameraDeepArView
                 @SuppressWarnings({ "unchecked" })
                 Map<String, Object> params = (Map<String, Object>) methodCall.arguments;
                 byte[] imageBytes = (byte[]) params.get("imageBytes");
+                int width = (int)params.get("width");
+                int height = (int)params.get("height");
 
                 try {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length); // , options
-                                                                                                     // ////R.drawable.texture
+                    // ImageBytes features uncompressed data so we have to make the bitmap manually and feed in the bytes.
+                    // Previously, we had used BitmapFactory.decodeByteArray, but it expects compressed data only.
+                    Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(imageBytes);
+                    byteBuffer.rewind();
+
+                    bitmap.copyPixelsFromBuffer(byteBuffer);
+
                     changeImage(bitmap);
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-
+            result.success("Image changed!");
         } else if ("changeImagePath".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({ "unchecked" })
@@ -337,6 +348,7 @@ public class CameraDeepArView
                     e.printStackTrace();
                 }
             }
+            result.success("Image path changed!");
         } else if ("changeParameterTexture".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({ "unchecked" })
@@ -652,21 +664,19 @@ public class CameraDeepArView
         }
     }
 
+    public void snapPhoto()
+    {
+        deepAR.takeScreenshot();
+    }
+
     @Override
     public void screenshotTaken(Bitmap bitmap) {
-        CharSequence now = DateFormat.format("yyyy_MM_dd_hh_mm_ss", new Date());
         try {
-            File imageFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                    + "/DeepAR_" + now + ".jpg");
-            FileOutputStream outputStream = new FileOutputStream(imageFile);
-            int quality = 100;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
-            outputStream.flush();
-            outputStream.close();
-            MediaScannerConnection.scanFile(context, new String[] { imageFile.toString() }, null, null);
-            // Toast.makeText(context, "Screenshot saved", Toast.LENGTH_SHORT).show();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, out);
+
             Map<String, Object> argument = new HashMap<>();
-            argument.put("path", imageFile.toString());
+            argument.put("imageBytes", out.toByteArray());
             methodChannel.invokeMethod("onSnapPhotoCompleted", argument);
         } catch (Throwable e) {
             e.printStackTrace();

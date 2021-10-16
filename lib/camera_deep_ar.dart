@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 typedef void CameraDeepArCallback(CameraDeepArController controller);
-typedef void OnImageCaptured(String path);
+typedef void OnImageCaptured(Uint8List imageBytes);
 typedef void OnVideoRecorded(String path);
 typedef void OnCameraReady(bool isCameraReady);
 
@@ -188,8 +188,8 @@ class _CameraDeepArState extends State<CameraDeepAr> {
     _controller = controller;
   }
 
-  void onImageCaptured(String path) {
-    widget.onImageCaptured(path);
+  void onImageCaptured(Uint8List imageBytes) {
+    widget.onImageCaptured(imageBytes);
   }
 
   void onVideoRecorded(String path) {
@@ -248,8 +248,8 @@ class CameraDeepArController {
         _cameraDeepArState.onVideoRecorded(path);
         break;
       case "onSnapPhotoCompleted":
-        String path = call.arguments['path'] as String;
-        _cameraDeepArState.onImageCaptured(path);
+        Uint8List imageBytes = call.arguments['imageBytes'] as Uint8List;
+        _cameraDeepArState.onImageCaptured(imageBytes);
         break;
       default:
         throw MissingPluginException();
