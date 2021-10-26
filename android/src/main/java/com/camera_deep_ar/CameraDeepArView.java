@@ -697,27 +697,16 @@ public class CameraDeepArView
     }
 
     @Override
-    public void videoRecordingFailed() {
-
-    }
+    public void videoRecordingFailed() { }
 
     @Override
-    public void videoRecordingPrepared() {
-
-    }
+    public void videoRecordingPrepared() { }
 
     @Override
-    public void shutdownFinished() {
-
-    }
+    public void shutdownFinished() { }
 
     @Override
-    public void initialized() {
-        // NOTE: to jumpstart masks
-        // TODO: check if it works with camera as well
-        Log.d("MASK", "Image Loaded");
-        deepAR.switchEffect("mask", getFilterPath(masks.get(0)));
-    }
+    public void initialized() { }
 
     @Override
     public void faceVisibilityChanged(boolean b) {
@@ -728,9 +717,7 @@ public class CameraDeepArView
     }
 
     @Override
-    public void imageVisibilityChanged(String s, boolean b) {
-
-    }
+    public void imageVisibilityChanged(String s, boolean b) { }
 
     @Override
     public void frameAvailable(Image frame) {
@@ -748,14 +735,10 @@ public class CameraDeepArView
     }
 
     @Override
-    public void error(ARErrorType arErrorType, String s) {
-
-    }
+    public void error(ARErrorType arErrorType, String s) { }
 
     @Override
-    public void effectSwitched(String s) {
-
-    }
+    public void effectSwitched(String s) { }
 
     private void handleZoom(MotionEvent event, Camera.Parameters params) {
         int maxZoom = params.getMaxZoom();
