@@ -309,6 +309,7 @@ public class CameraDeepArView
                 deepAR.changeParameterFloat(changeParameter.toString(), component.toString(), parameter.toString(),
                         ((Double) floatParam).floatValue());
             }
+            result.success("Parameter changed!");
         } else if ("changeImage".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({ "unchecked" })
@@ -370,6 +371,7 @@ public class CameraDeepArView
                     e.printStackTrace();
                 }
             }
+            result.success("Texture path changed!");
         } else if ("changeParameterVec4".equals(methodCall.method)) {
             if (methodCall.arguments instanceof HashMap) {
                 @SuppressWarnings({ "unchecked" })
