@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import ai.deepar.ar.DeepAR;
-import ai.deepar.ar.DeepARImageFormat;
 
 public class LoadImageHandler {
 
@@ -124,9 +123,9 @@ public class LoadImageHandler {
         // NOTE Due to initial rotation of portrait image by 90 degrees, we need to tell DeepAR to rotate
         // the final output by another 270 degrees to output a portrait image
         SystemClock.sleep(100);
-        imageReceiver.receiveFrame(nv21bb, width, height, 0, false, DeepARImageFormat.YUV_NV21, 1);
+        imageReceiver.receiveFrame(nv21bb, width, height, 0, false);
         SystemClock.sleep(100);
-        imageReceiver.receiveFrame(nv21bb, width, height, 0, false, DeepARImageFormat.YUV_NV21, 1 );
+        imageReceiver.receiveFrame(nv21bb, width, height, 0, false);
     }
 
     // https://stackoverflow.com/questions/5960247/convert-bitmap-array-to-yuv-ycbcr-nv21

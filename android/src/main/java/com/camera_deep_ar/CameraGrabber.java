@@ -16,8 +16,6 @@ import java.util.List;
 
 import ai.deepar.ar.CameraResolutionPreset;
 import ai.deepar.ar.DeepAR;
-import ai.deepar.ar.DeepARImageFormat;
-
 
 /**
  * Created by luka on 19/04/17.
@@ -201,7 +199,7 @@ public class CameraGrabber
                                 buffers[currentBuffer].position(0);
                                 if (frameReceiver != null) {
 //                                    frameReceiver.receiveFrame(buffers[currentBuffer], width, height, cameraOrientation, cameraDevice == Camera.CameraInfo.CAMERA_FACING_FRONT);
-                                    frameReceiver.receiveFrame(buffers[currentBuffer], width, height, cameraOrientation, cameraDevice == Camera.CameraInfo.CAMERA_FACING_FRONT, DeepARImageFormat.YUV_420_888, 1000);
+                                    frameReceiver.receiveFrame(buffers[currentBuffer], width, height, cameraOrientation, cameraDevice == Camera.CameraInfo.CAMERA_FACING_FRONT);
                                 }
                                 currentBuffer = ( currentBuffer + 1 ) % NUMBER_OF_BUFFERS;
                             }
